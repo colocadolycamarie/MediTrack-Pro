@@ -1,0 +1,1686 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: MediTrack Pro API — PULSO IoT Pill Dispensing System
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: patients
+    description: Patient profiles
+  - name: caregivers
+    description: Caregiver management
+  - name: medications
+    description: Medication management
+  - name: schedules
+    description: Dosing schedules
+  - name: devices
+    description: IoT dispensing devices
+  - name: adherence
+    description: Adherence tracking
+  - name: dashboard
+    description: Dashboard summaries
+  - name: qr
+    description: Emergency QR codes
+  - name: notifications
+    description: Notification settings
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── Auth ──────────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordInput"
+      responses:
+        "200":
+          description: Reset email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ── Patients ───────────────────────────────────────────────
+  /patients:
+    get:
+      operationId: listPatients
+      tags: [patients]
+      summary: List patients linked to current caregiver
+      responses:
+        "200":
+          description: List of patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Patient"
+    post:
+      operationId: createPatient
+      tags: [patients]
+      summary: Create a patient profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+
+  /patients/{patientId}:
+    get:
+      operationId: getPatient
+      tags: [patients]
+      summary: Get a patient by ID
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Patient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updatePatient
+      tags: [patients]
+      summary: Update a patient profile
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+
+  # ── Caregivers ─────────────────────────────────────────────
+  /patients/{patientId}/caregivers:
+    get:
+      operationId: listPatientCaregivers
+      tags: [caregivers]
+      summary: List caregivers linked to a patient
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of caregivers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CaregiverLink"
+    post:
+      operationId: inviteCaregiver
+      tags: [caregivers]
+      summary: Invite a caregiver to a patient's care circle
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaregiverInviteInput"
+      responses:
+        "201":
+          description: Invited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaregiverLink"
+
+  /patients/{patientId}/caregivers/{caregiverId}:
+    delete:
+      operationId: removeCaregiver
+      tags: [caregivers]
+      summary: Remove a caregiver from the care circle
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: caregiverId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ── Medications ────────────────────────────────────────────
+  /patients/{patientId}/medications:
+    get:
+      operationId: listMedications
+      tags: [medications]
+      summary: List medications for a patient
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of medications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Medication"
+    post:
+      operationId: createMedication
+      tags: [medications]
+      summary: Add a medication
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MedicationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medication"
+        "409":
+          description: Drug interaction warning
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InteractionWarning"
+
+  /patients/{patientId}/medications/{medicationId}:
+    get:
+      operationId: getMedication
+      tags: [medications]
+      summary: Get a medication
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: medicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Medication
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medication"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMedication
+      tags: [medications]
+      summary: Update a medication
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: medicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MedicationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medication"
+    delete:
+      operationId: deleteMedication
+      tags: [medications]
+      summary: Delete a medication
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: medicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ── Dosing Schedules ───────────────────────────────────────
+  /patients/{patientId}/medications/{medicationId}/schedules:
+    get:
+      operationId: listSchedules
+      tags: [schedules]
+      summary: List dosing schedules for a medication
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: medicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of schedules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Schedule"
+    post:
+      operationId: createSchedule
+      tags: [schedules]
+      summary: Create a dosing schedule
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: medicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Schedule"
+
+  /patients/{patientId}/medications/{medicationId}/schedules/{scheduleId}:
+    patch:
+      operationId: updateSchedule
+      tags: [schedules]
+      summary: Update a dosing schedule
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: medicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: scheduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Schedule"
+    delete:
+      operationId: deleteSchedule
+      tags: [schedules]
+      summary: Delete a dosing schedule
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: medicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: scheduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ── Devices ────────────────────────────────────────────────
+  /patients/{patientId}/devices:
+    get:
+      operationId: listDevices
+      tags: [devices]
+      summary: List IoT dispensers for a patient
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+    post:
+      operationId: pairDevice
+      tags: [devices]
+      summary: Pair a new dispenser
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DevicePairInput"
+      responses:
+        "201":
+          description: Paired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+
+  /patients/{patientId}/devices/{deviceId}:
+    get:
+      operationId: getDevice
+      tags: [devices]
+      summary: Get a device with funnel status
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Device with funnels
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceDetail"
+
+  /patients/{patientId}/devices/{deviceId}/dispense:
+    post:
+      operationId: manualDispense
+      tags: [devices]
+      summary: Manual dispense (PIN-gated)
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DispenseInput"
+      responses:
+        "200":
+          description: Dispensed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DispenseResult"
+        "401":
+          description: Invalid PIN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{patientId}/devices/{deviceId}/logs:
+    get:
+      operationId: getDeviceLogs
+      tags: [devices]
+      summary: Get device activity logs
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Device logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DeviceLog"
+
+  # ── Adherence ──────────────────────────────────────────────
+  /patients/{patientId}/adherence:
+    get:
+      operationId: listAdherenceLogs
+      tags: [adherence]
+      summary: List dose events for a patient
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dose log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DoseEvent"
+
+  /patients/{patientId}/adherence/{doseEventId}/confirm:
+    post:
+      operationId: confirmDose
+      tags: [adherence]
+      summary: Confirm a dose was taken
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: doseEventId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DoseConfirmInput"
+      responses:
+        "200":
+          description: Confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoseEvent"
+
+  /patients/{patientId}/adherence/summary:
+    get:
+      operationId: getAdherenceSummary
+      tags: [adherence]
+      summary: Get adherence stats and streak
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Adherence summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdherenceSummary"
+
+  /patients/{patientId}/adherence/weekly:
+    get:
+      operationId: getWeeklyAdherence
+      tags: [adherence]
+      summary: Get weekly adherence chart data
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Weekly chart data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WeeklyAdherencePoint"
+
+  /patients/{patientId}/adherence/trends:
+    get:
+      operationId: getAdherenceTrends
+      tags: [adherence]
+      summary: Get trend flags (e.g. weekend-clustered misses)
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trend analysis
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrendFlag"
+
+  /patients/{patientId}/adherence/export:
+    get:
+      operationId: exportAdherenceReport
+      tags: [adherence]
+      summary: Export adherence report data
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Export data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportReport"
+
+  # ── Dashboard (wow endpoint) ───────────────────────────────
+  /patients/{patientId}/dashboard:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get full dashboard summary for a patient
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  # ── Emergency QR ───────────────────────────────────────────
+  /patients/{patientId}/emergency-qr:
+    get:
+      operationId: getEmergencyQr
+      tags: [qr]
+      summary: Get emergency QR data for a patient
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Emergency QR data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmergencyQrData"
+
+  /emergency/{token}:
+    get:
+      operationId: getEmergencyPublicProfile
+      tags: [qr]
+      summary: Zero-login emergency profile (QR scan target)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Public emergency profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmergencyProfile"
+        "404":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Notifications ──────────────────────────────────────────
+  /patients/{patientId}/notifications:
+    get:
+      operationId: getNotificationSettings
+      tags: [notifications]
+      summary: Get notification settings for a patient
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notification settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSettings"
+    patch:
+      operationId: updateNotificationSettings
+      tags: [notifications]
+      summary: Update notification settings
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSettingsUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSettings"
+
+# ── Schemas ────────────────────────────────────────────────────────────────────
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    # Auth
+    RegistrationInput:
+      type: object
+      required: [name, email, password, role]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: [caregiver, patient, pwd]
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    ForgotPasswordInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+
+    AuthResult:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    User:
+      type: object
+      required: [id, name, email, role]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [caregiver, patient, pwd]
+        createdAt:
+          type: string
+          format: date-time
+
+    # Patient
+    PatientInput:
+      type: object
+      required: [name, dateOfBirth, bloodType]
+      properties:
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        bloodType:
+          type: string
+          enum: [A+, A-, B+, B-, AB+, AB-, O+, O-]
+        conditions:
+          type: array
+          items:
+            type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        emergencyContactName:
+          type: string
+        emergencyContactPhone:
+          type: string
+        preferredLanguage:
+          type: string
+          enum: [en, fil]
+          default: en
+
+    PatientUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        bloodType:
+          type: string
+          enum: [A+, A-, B+, B-, AB+, AB-, O+, O-]
+        conditions:
+          type: array
+          items:
+            type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        emergencyContactName:
+          type: string
+        emergencyContactPhone:
+          type: string
+        preferredLanguage:
+          type: string
+          enum: [en, fil]
+
+    Patient:
+      type: object
+      required: [id, name, dateOfBirth, bloodType, conditions, allergies, emergencyToken]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        bloodType:
+          type: string
+        conditions:
+          type: array
+          items:
+            type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        emergencyContactName:
+          type: ["string", "null"]
+        emergencyContactPhone:
+          type: ["string", "null"]
+        emergencyToken:
+          type: string
+        preferredLanguage:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # Caregiver
+    CaregiverInviteInput:
+      type: object
+      required: [email, accessLevel]
+      properties:
+        email:
+          type: string
+        accessLevel:
+          type: string
+          enum: [view, full]
+
+    CaregiverLink:
+      type: object
+      required: [id, caregiverId, patientId, accessLevel, status]
+      properties:
+        id:
+          type: integer
+        caregiverId:
+          type: integer
+        patientId:
+          type: integer
+        caregiverName:
+          type: string
+        caregiverEmail:
+          type: string
+        accessLevel:
+          type: string
+          enum: [view, full]
+        status:
+          type: string
+          enum: [pending, active]
+        createdAt:
+          type: string
+          format: date-time
+
+    # Medication
+    MedicationInput:
+      type: object
+      required: [name, dosage, funnelNumber, stockCount]
+      properties:
+        name:
+          type: string
+        genericName:
+          type: string
+        dosage:
+          type: string
+        form:
+          type: string
+          enum: [tablet, capsule, liquid, other]
+          default: tablet
+        funnelNumber:
+          type: integer
+          minimum: 1
+          maximum: 8
+        stockCount:
+          type: integer
+        instructions:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+
+    MedicationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        genericName:
+          type: string
+        dosage:
+          type: string
+        form:
+          type: string
+          enum: [tablet, capsule, liquid, other]
+        funnelNumber:
+          type: integer
+        stockCount:
+          type: integer
+        instructions:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+
+    Medication:
+      type: object
+      required: [id, patientId, name, dosage, funnelNumber, stockCount, daysRemaining]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        name:
+          type: string
+        genericName:
+          type: ["string", "null"]
+        dosage:
+          type: string
+        form:
+          type: string
+        funnelNumber:
+          type: integer
+        stockCount:
+          type: integer
+        stockPercentage:
+          type: number
+        daysRemaining:
+          type: ["integer", "null"]
+        instructions:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+        isLowStock:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    InteractionWarning:
+      type: object
+      required: [warning, conflictingMedications]
+      properties:
+        warning:
+          type: string
+        conflictingMedications:
+          type: array
+          items:
+            type: string
+        canOverride:
+          type: boolean
+
+    # Schedule
+    ScheduleInput:
+      type: object
+      required: [timeType]
+      properties:
+        timeType:
+          type: string
+          enum: [clock, meal_relative]
+        clockTime:
+          type: ["string", "null"]
+        mealRelation:
+          type: ["string", "null"]
+          enum: [before_breakfast, after_breakfast, before_lunch, after_lunch, before_dinner, after_dinner, "null"]
+        daysOfWeek:
+          type: array
+          items:
+            type: string
+            enum: [mon, tue, wed, thu, fri, sat, sun]
+
+    ScheduleUpdate:
+      type: object
+      properties:
+        timeType:
+          type: string
+          enum: [clock, meal_relative]
+        clockTime:
+          type: ["string", "null"]
+        mealRelation:
+          type: ["string", "null"]
+        daysOfWeek:
+          type: array
+          items:
+            type: string
+
+    Schedule:
+      type: object
+      required: [id, medicationId, timeType]
+      properties:
+        id:
+          type: integer
+        medicationId:
+          type: integer
+        timeType:
+          type: string
+          enum: [clock, meal_relative]
+        clockTime:
+          type: ["string", "null"]
+        mealRelation:
+          type: ["string", "null"]
+        daysOfWeek:
+          type: array
+          items:
+            type: string
+        nextDoseAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    # Device
+    DevicePairInput:
+      type: object
+      required: [deviceCode, ssid, wifiPassword]
+      properties:
+        deviceCode:
+          type: string
+        ssid:
+          type: string
+        wifiPassword:
+          type: string
+        nickname:
+          type: string
+
+    DispenseInput:
+      type: object
+      required: [medicationId, pin]
+      properties:
+        medicationId:
+          type: integer
+        pin:
+          type: string
+        funnelNumber:
+          type: integer
+
+    DispenseResult:
+      type: object
+      required: [success, dispensedAt]
+      properties:
+        success:
+          type: boolean
+        dispensedAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+
+    Funnel:
+      type: object
+      required: [number, medicationId, stockCount, status]
+      properties:
+        number:
+          type: integer
+        medicationId:
+          type: ["integer", "null"]
+        medicationName:
+          type: ["string", "null"]
+        stockCount:
+          type: integer
+        status:
+          type: string
+          enum: [ok, low, empty, jam]
+
+    Device:
+      type: object
+      required: [id, patientId, status, nickname]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        nickname:
+          type: string
+        deviceCode:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, error]
+        wifiStrength:
+          type: ["integer", "null"]
+        lastSeenAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    DeviceDetail:
+      type: object
+      required: [id, patientId, status, nickname, funnels]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        nickname:
+          type: string
+        deviceCode:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, error]
+        wifiStrength:
+          type: ["integer", "null"]
+        lastSeenAt:
+          type: ["string", "null"]
+          format: date-time
+        funnels:
+          type: array
+          items:
+            $ref: "#/components/schemas/Funnel"
+        createdAt:
+          type: string
+          format: date-time
+
+    DeviceLog:
+      type: object
+      required: [id, deviceId, event, timestamp]
+      properties:
+        id:
+          type: integer
+        deviceId:
+          type: integer
+        event:
+          type: string
+          enum: [dispense, missed, jam, refill, online, offline, error]
+        message:
+          type: string
+        funnelNumber:
+          type: ["integer", "null"]
+        timestamp:
+          type: string
+          format: date-time
+
+    # Adherence
+    DoseEvent:
+      type: object
+      required: [id, patientId, medicationId, scheduledAt, status]
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        medicationId:
+          type: integer
+        medicationName:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        confirmedAt:
+          type: ["string", "null"]
+          format: date-time
+        status:
+          type: string
+          enum: [pending, taken, missed, snoozed]
+
+    DoseConfirmInput:
+      type: object
+      required: [confirmedAt]
+      properties:
+        confirmedAt:
+          type: string
+          format: date-time
+        method:
+          type: string
+          enum: [tap, voice, auto]
+          default: tap
+
+    AdherenceSummary:
+      type: object
+      required: [patientId, overallRate, currentStreak, takenCount, missedCount, totalCount]
+      properties:
+        patientId:
+          type: integer
+        overallRate:
+          type: number
+          description: Percentage 0-100
+        currentStreak:
+          type: integer
+          description: Consecutive days with all doses taken
+        takenCount:
+          type: integer
+        missedCount:
+          type: integer
+        totalCount:
+          type: integer
+        lastUpdated:
+          type: string
+          format: date-time
+
+    WeeklyAdherencePoint:
+      type: object
+      required: [date, taken, missed, total]
+      properties:
+        date:
+          type: string
+          format: date
+        taken:
+          type: integer
+        missed:
+          type: integer
+        total:
+          type: integer
+        rate:
+          type: number
+
+    TrendFlag:
+      type: object
+      required: [id, type, message, severity]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [weekend_misses, evening_misses, low_stock, streak_risk, perfect_week]
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        detectedAt:
+          type: string
+          format: date-time
+
+    ExportReport:
+      type: object
+      required: [patientId, generatedAt, doseEvents, summary]
+      properties:
+        patientId:
+          type: integer
+        patientName:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        shareToken:
+          type: ["string", "null"]
+        summary:
+          $ref: "#/components/schemas/AdherenceSummary"
+        doseEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/DoseEvent"
+
+    # Dashboard
+    UpcomingDose:
+      type: object
+      required: [doseEventId, medicationId, medicationName, scheduledAt, status]
+      properties:
+        doseEventId:
+          type: integer
+          description: The underlying DoseEvent id — pass this to POST /adherence/{doseEventId}/confirm to mark it taken.
+        medicationId:
+          type: integer
+        medicationName:
+          type: string
+        dosage:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, taken, missed, overdue]
+        minutesUntilDue:
+          type: ["integer", "null"]
+
+    DashboardSummary:
+      type: object
+      required: [patientId, patientName, upcomingDoses, adherenceRate, currentStreak, stockAlerts, deviceStatus]
+      properties:
+        patientId:
+          type: integer
+        patientName:
+          type: string
+        conditions:
+          type: array
+          items:
+            type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        nextDoseAt:
+          type: ["string", "null"]
+          format: date-time
+        minutesUntilNextDose:
+          type: ["integer", "null"]
+        upcomingDoses:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpcomingDose"
+        adherenceRate:
+          type: number
+        currentStreak:
+          type: integer
+        dosesToday:
+          type: integer
+        dosesTakenToday:
+          type: integer
+        stockAlerts:
+          type: array
+          items:
+            type: object
+            properties:
+              medicationName:
+                type: string
+              daysRemaining:
+                type: integer
+              funnelNumber:
+                type: integer
+        deviceStatus:
+          type: string
+          enum: [online, offline, error, unpaired]
+        trendFlags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendFlag"
+
+    # Emergency QR
+    EmergencyQrData:
+      type: object
+      required: [patientId, token, qrUrl]
+      properties:
+        patientId:
+          type: integer
+        token:
+          type: string
+        qrUrl:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+
+    EmergencyProfile:
+      type: object
+      required: [name, bloodType, conditions, allergies, medications]
+      properties:
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        bloodType:
+          type: string
+        conditions:
+          type: array
+          items:
+            type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        medications:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              dosage:
+                type: string
+              form:
+                type: string
+        emergencyContactName:
+          type: ["string", "null"]
+        emergencyContactPhone:
+          type: ["string", "null"]
+
+    # Notifications
+    NotificationSettings:
+      type: object
+      required: [patientId, pushEnabled, smsEnabled, smsPhone, weeklyDigestEnabled, reminderMinutesBefore]
+      properties:
+        patientId:
+          type: integer
+        pushEnabled:
+          type: boolean
+        smsEnabled:
+          type: boolean
+        smsPhone:
+          type: ["string", "null"]
+        weeklyDigestEnabled:
+          type: boolean
+        reminderMinutesBefore:
+          type: integer
+        language:
+          type: string
+          enum: [en, fil]
+        largerTextEnabled:
+          type: boolean
+        highContrastEnabled:
+          type: boolean
+
+    NotificationSettingsUpdate:
+      type: object
+      properties:
+        pushEnabled:
+          type: boolean
+        smsEnabled:
+          type: boolean
+        smsPhone:
+          type: ["string", "null"]
+        weeklyDigestEnabled:
+          type: boolean
+        reminderMinutesBefore:
+          type: integer
+        language:
+          type: string
+          enum: [en, fil]
+        largerTextEnabled:
+          type: boolean
+        highContrastEnabled:
+          type: boolean
