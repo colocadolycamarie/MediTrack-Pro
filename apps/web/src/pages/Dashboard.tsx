@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Readout } from "@/components/ui/readout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShieldAlert, CheckCircle2, AlertTriangle, AlertCircle, XCircle, Pill, Check, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, AlertCircle, XCircle, Pill, Check, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { formatTime } from "@/lib/utils";
 
@@ -162,8 +162,8 @@ export default function Dashboard() {
         </div>
 
         <div className="rounded-2xl border border-card-border bg-card p-6 shadow-[0_1px_2px_rgba(10,53,53,0.04),0_10px_28px_-16px_rgba(14,79,79,0.18)]">
-          <div className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4" /> Dispenser status
+          <div className="text-sm font-semibold text-muted-foreground mb-4">
+            Dispenser status
           </div>
           <div className="flex items-center gap-3 mb-5">
             <span className="relative flex h-2.5 w-2.5">

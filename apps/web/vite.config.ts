@@ -20,6 +20,29 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Split heavy, rarely-changing vendor code out of the main bundle so
+        // a route change or app-code edit doesn't force a re-download of
+        // React/Radix/Recharts, and so the first paint isn't blocked on
+        // chart code the dashboard route doesn't even use.
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "wouter"],
+          "vendor-radix": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-toast",
+            "@radix-ui/react-label",
+            "@radix-ui/react-switch",
+            "@radix-ui/react-slot",
+          ],
+          "vendor-charts": ["recharts"],
+          "vendor-motion": ["framer-motion"],
+        },
+      },
+    },
   },
   server: {
     port: Number(process.env.PORT ?? 5173),

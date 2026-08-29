@@ -9,7 +9,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageSpinner } from '@/components/PageSpinner';
 import { bootstrapAuthToken } from '@/lib/auth-token';
-import { setUnauthorizedHandler } from '@meditrack/api-client-react';
+import { setBaseUrl, setUnauthorizedHandler } from '@meditrack/api-client-react';
 
 // Pages — the landing page loads eagerly since it's almost always the first
 // paint; everything else is route-split so a first-time visitor isn't paying
@@ -29,6 +29,12 @@ const AddPatient = lazy(() => import('@/pages/AddPatient'));
 const WatchUI = lazy(() => import('@/pages/WatchUI'));
 const NotFound = lazy(() => import('@/pages/not-found'));
 
+// When the frontend and API are deployed separately (e.g. this app on
+// Vercel, the API on Render), relative `/api/...` requests would resolve
+// against the Vercel domain instead of the actual backend. VITE_API_URL
+// points requests at the real backend; when unset (local dev, or the API
+// served from the same origin) requests stay relative as before.
+setBaseUrl(import.meta.env.VITE_API_URL || null);
 bootstrapAuthToken();
 
 const queryClient = new QueryClient({

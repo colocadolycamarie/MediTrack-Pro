@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 
 interface LogoMarkProps {
   className?: string;
@@ -12,7 +13,7 @@ const sizeMap = {
 };
 
 /**
- * PULSO / MediTrack Pro brand mark — the dispenser + smartwatch + QR icon.
+ * MediTrack Pro brand mark — the dispenser + smartwatch + QR icon.
  * Rendered plainly (no extra chip/background) since the artwork already
  * carries its own panel, so it drops cleanly onto dark or light surfaces.
  */
@@ -33,17 +34,25 @@ interface LogoProps {
   markSize?: "sm" | "md" | "lg";
   textClassName?: string;
   tone?: "light" | "dark";
+  /** Where the mark links to. Pass `null` to render a plain, non-interactive lockup. */
+  href?: string | null;
+  /** Set false to render the wordmark only, without the icon mark. */
+  showMark?: boolean;
 }
 
 /**
  * Full lockup: mark + wordmark. `tone="dark"` is for use on the dark
  * panel-ink surfaces (auth screens, footer); `tone="light"` (default)
  * is for use on the porcelain background.
+ *
+ * Links to `href` (the landing page's hero by default) so the wordmark
+ * behaves the way a brand mark should everywhere it appears — pass
+ * `href={null}` for the rare case it needs to render as plain text.
  */
-export function Logo({ className, markSize = "md", textClassName, tone = "light" }: LogoProps) {
-  return (
+export function Logo({ className, markSize = "md", textClassName, tone = "light", href = "/", showMark = true }: LogoProps) {
+  const lockup = (
     <div className={cn("flex items-center gap-2.5", className)}>
-      <LogoMark size={markSize} />
+      {showMark && <LogoMark size={markSize} />}
       <span
         className={cn(
           "font-heading font-semibold tracking-tight leading-none",
@@ -54,5 +63,23 @@ export function Logo({ className, markSize = "md", textClassName, tone = "light"
         MediTrack <span className={tone === "dark" ? "text-gintong-digit" : "text-accent"}>Pro</span>
       </span>
     </div>
+  );
+
+  if (!href) return lockup;
+
+  return (
+    <Link
+      href={href}
+      aria-label="MediTrack Pro — go to home"
+      className={cn(
+        "inline-flex rounded-lg transition-opacity hover:opacity-75 active:opacity-60",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+        tone === "dark"
+          ? "focus-visible:ring-gintong-digit/50 focus-visible:ring-offset-panel-ink"
+          : "focus-visible:ring-primary/50 focus-visible:ring-offset-background",
+      )}
+    >
+      {lockup}
+    </Link>
   );
 }

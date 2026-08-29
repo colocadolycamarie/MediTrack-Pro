@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc } from "drizzle-orm";
-import { db, devicesTable, deviceLogsTable, medicationsTable } from "@meditrack/db";
+import { db, devicesTable, deviceLogsTable, medicationsTable, patientsTable } from "@meditrack/db";
 import {
   ListDevicesParams,
   PairDeviceParams,
@@ -10,14 +10,13 @@ import {
   ManualDispenseBody,
   GetDeviceLogsParams,
 } from "@meditrack/api-zod";
+import bcrypt from "bcryptjs";
 
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
 router.use(requireAuth);
-
-const CAREGIVER_PIN = "1234"; // Demo PIN
 
 function getFunnelStatus(stockCount: number): "ok" | "low" | "empty" | "jam" {
   if (stockCount === 0) return "empty";
@@ -142,7 +141,18 @@ router.post("/patients/:patientId/devices/:deviceId/dispense", async (req, res):
     return;
   }
 
-  if (parsed.data.pin !== CAREGIVER_PIN) {
+  const [patient] = await db.select().from(patientsTable)
+    .where(eq(patientsTable.id, params.data.patientId)).limit(1);
+  if (!patient) {
+    res.status(404).json({ error: "Patient not found." });
+    return;
+  }
+  if (!patient.dispensePinHash) {
+    res.status(428).json({ error: "No dispense PIN has been set for this patient yet. Set one in Settings first." });
+    return;
+  }
+  const pinMatches = await bcrypt.compare(parsed.data.pin, patient.dispensePinHash);
+  if (!pinMatches) {
     res.status(401).json({ error: "Incorrect PIN. Contact your caregiver if you need help." });
     return;
   }

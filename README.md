@@ -1,8 +1,19 @@
 # MediTrack Pro
 
-A caregiver dashboard for the PULSO IoT pill dispenser — medication schedules,
-adherence tracking, a shared "Care Circle" of caregivers per patient, and
-emergency profile QR codes.
+A caregiver dashboard for a connected IoT pill dispenser — medication
+schedules, stock and adherence tracking, a shared "Care Circle" of
+caregivers per patient, and zero-login emergency profile QR codes.
+
+## Features
+
+- **Medications** — add, edit, and remove prescriptions, with per-funnel
+  assignment and stock levels
+- **Stock Monitor** — days-remaining and low-stock alerts per medication
+- **Dispenser** — pair a device, view funnel status, trigger a manual
+  dispense with caregiver PIN authorization
+- **Adherence** — trends and logs of taken/missed/overdue doses
+- **Emergency QR** — a printable, no-login patient card for first responders
+- **Care Circle** — invite other caregivers to a shared patient profile
 
 ## Stack
 
@@ -48,6 +59,25 @@ to the API, so no manual CORS or origin setup is needed locally.
 | `npm run push --workspace @meditrack/db` | Push the Drizzle schema to your database |
 | `npm run codegen --workspace @meditrack/api-spec` | Regenerate `api-zod` and `api-client-react` from `openapi.yaml` |
 
+## Known limitations
+
+Not yet production-ready — flagging these so nothing ships by surprise:
+
+- **Sessions are in-memory** (`apps/api/src/routes/auth.ts`). Every restart
+  or redeploy logs everyone out, and it won't work behind more than one
+  server instance. Swap for JWTs or a DB-backed session table before a real
+  multi-instance deploy.
+- **Forgot-password is a no-op.** `/auth/forgot-password` always returns
+  success but never sends an email or generates a reset token — there's no
+  working reset flow yet.
+- **Caregiver invites don't send anything.** Inviting a caregiver by email
+  who has no account creates a user row with a `"placeholder"` password
+  hash and no way to activate it — they can never actually log in until an
+  invite/activation email flow is built.
+- **`/watch` is a static design preview**, not wired to real data (mock
+  time and a hardcoded "Losartan 50mg" dose) — useful for showing the
+  smartwatch companion concept, not a working feature.
+
 ## Production
 
 `apps/api` serves the built frontend directly, so the whole app is a single
@@ -62,13 +92,11 @@ NODE_ENV=production DATABASE_URL=... npm run start --workspace @meditrack/api
 
 ```
 apps/
-  api/            Express API server
-  web/             React frontend
+  api/                Express API server
+  web/                React frontend
 packages/
-  db/              Drizzle schema + database client
-  api-spec/        Source OpenAPI spec + codegen config
-  api-zod/         Generated Zod schemas (do not edit — regenerate instead)
-  api-client-react/  Generated React Query hooks (do not edit — regenerate instead)
-docs/
-  design-system.md  UI/UX design system reference
+  db/                 Drizzle schema + database client
+  api-spec/           Source OpenAPI spec + codegen config
+  api-zod/            Generated Zod schemas (do not edit — regenerate instead)
+  api-client-react/   Generated React Query hooks (do not edit — regenerate instead)
 ```

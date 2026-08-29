@@ -4,8 +4,10 @@ import {
   useListMedications, 
   getListMedicationsQueryKey,
   useCreateMedication,
+  useUpdateMedication,
   useDeleteMedication,
-  MedicationInputForm
+  MedicationInputForm,
+  type Medication,
 } from "@meditrack/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,9 +16,20 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Readout } from "@/components/ui/readout";
-import { Plus, Pill, AlertTriangle, Trash2, Edit2, CalendarClock } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@/components/ui/empty";
+import { Plus, AlertTriangle, Trash2, Edit2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from "@/components/ui/empty";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
@@ -36,14 +49,28 @@ const medicationSchema = z.object({
 export default function Medications() {
   const { patientId, t } = useApp();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingMed, setEditingMed] = useState<Medication | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Medication | null>(null);
+
+  const handleRequestRefill = (medicationName: string) => {
+    toast({
+      title: "Low stock noted",
+      description: `We've flagged ${medicationName} as low. Automatic pharmacy reordering isn't set up yet — please contact the pharmacy directly for now.`,
+    });
+  };
   
   const { data: medications, isLoading } = useListMedications(patientId, {
     query: { queryKey: getListMedicationsQueryKey(patientId) }
   });
 
   const createMut = useCreateMedication();
+  const updateMut = useUpdateMedication();
   const deleteMut = useDeleteMedication();
+
+  const isEditing = editingMed != null;
+  const isFormOpen = isAddOpen || isEditing;
 
   const form = useForm<z.infer<typeof medicationSchema>>({
     resolver: zodResolver(medicationSchema),
@@ -58,24 +85,64 @@ export default function Medications() {
     }
   });
 
+  const closeForm = () => {
+    setIsAddOpen(false);
+    setEditingMed(null);
+    form.reset();
+  };
+
+  const openAdd = () => {
+    form.reset({
+      name: "",
+      genericName: "",
+      dosage: "",
+      form: "tablet",
+      funnelNumber: 1,
+      stockCount: 30,
+      instructions: "",
+    });
+    setIsAddOpen(true);
+  };
+
+  const openEdit = (med: Medication) => {
+    form.reset({
+      name: med.name,
+      genericName: med.genericName ?? "",
+      dosage: med.dosage,
+      form: (med.form as z.infer<typeof medicationSchema>["form"]) ?? "tablet",
+      funnelNumber: med.funnelNumber,
+      stockCount: med.stockCount,
+      instructions: med.instructions ?? "",
+    });
+    setEditingMed(med);
+  };
+
   const onSubmit = (values: z.infer<typeof medicationSchema>) => {
+    if (isEditing && editingMed) {
+      updateMut.mutate({ patientId, medicationId: editingMed.id, data: values }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListMedicationsQueryKey(patientId) });
+          closeForm();
+        }
+      });
+      return;
+    }
     createMut.mutate({ patientId, data: values }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMedicationsQueryKey(patientId) });
-        setIsAddOpen(false);
-        form.reset();
+        closeForm();
       }
     });
   };
 
-  const handleDelete = (medicationId: number) => {
-    if (confirm("Are you sure you want to remove this medication?")) {
-      deleteMut.mutate({ patientId, medicationId }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListMedicationsQueryKey(patientId) });
-        }
-      });
-    }
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteMut.mutate({ patientId, medicationId: deleteTarget.id }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMedicationsQueryKey(patientId) });
+        setDeleteTarget(null);
+      }
+    });
   };
 
   return (
@@ -86,16 +153,15 @@ export default function Medications() {
           <p className="text-muted-foreground">Manage prescriptions, schedules, and stock.</p>
         </div>
         
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button className="shrink-0 shadow-md">
-              <Plus className="w-5 h-5 mr-2" />
-              {t("Add Medication")}
-            </Button>
-          </DialogTrigger>
+        <Button className="shrink-0 shadow-md" onClick={openAdd}>
+          <Plus className="w-5 h-5 mr-2" />
+          {t("Add Medication")}
+        </Button>
+
+        <Dialog open={isFormOpen} onOpenChange={(open) => { if (!open) closeForm(); }}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Add New Medication</DialogTitle>
+              <DialogTitle>{isEditing ? "Edit Medication" : "Add New Medication"}</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -134,10 +200,12 @@ export default function Medications() {
                 <FormField control={form.control} name="instructions" render={({field}) => (
                   <FormItem><FormLabel>Special Instructions</FormLabel><FormControl><Input placeholder="e.g. Take with food" {...field}/></FormControl><FormMessage/></FormItem>
                 )} />
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={createMut.isPending}>Save Medication</Button>
-                </div>
+                <DialogFooter className="pt-4">
+                  <Button type="button" variant="outline" onClick={closeForm}>Cancel</Button>
+                  <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>
+                    {isEditing ? "Save Changes" : "Save Medication"}
+                  </Button>
+                </DialogFooter>
               </form>
             </Form>
           </DialogContent>
@@ -158,16 +226,13 @@ export default function Medications() {
           ) : !medications || medications.length === 0 ? (
             <Empty>
               <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Pill />
-                </EmptyMedia>
                 <EmptyTitle>No medications yet</EmptyTitle>
                 <EmptyDescription>
                   {t("No medications yet. Add the first one to start the dispensing schedule.")}
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <Button onClick={() => setIsAddOpen(true)} className="gap-2">
+                <Button onClick={openAdd} className="gap-2">
                   <Plus className="w-4 h-4" /> {t("Add Medication")}
                 </Button>
               </EmptyContent>
@@ -184,10 +249,10 @@ export default function Medications() {
                         {med.genericName && <p className="text-sm text-muted-foreground">{med.genericName}</p>}
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => openEdit(med)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(med.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteTarget(med)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -241,7 +306,7 @@ export default function Medications() {
                   </div>
                   
                   {med.isLowStock && (
-                    <Button variant="accent" className="w-full mt-6 shadow-sm">Request Refill</Button>
+                    <Button variant="accent" className="w-full mt-6 shadow-sm" onClick={() => handleRequestRefill(med.name)}>Request Refill</Button>
                   )}
                 </CardContent>
               </Card>
@@ -249,6 +314,27 @@ export default function Medications() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={deleteTarget != null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {deleteTarget?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the medication and stop its dispensing schedule. This action can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMut.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMut.isPending ? "Removing…" : "Remove Medication"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

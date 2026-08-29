@@ -110,6 +110,7 @@ export const ListPatientsResponseItem = zod.object({
   "emergencyContactPhone": zod.string().nullish(),
   "emergencyToken": zod.string(),
   "preferredLanguage": zod.string().optional(),
+  "hasDispensePin": zod.boolean().describe('Whether a manual-dispense PIN has been set for this patient yet.'),
   "createdAt": zod.coerce.date().optional()
 })
 export const ListPatientsResponse = zod.array(ListPatientsResponseItem)
@@ -142,6 +143,7 @@ export const CreatePatientResponse = zod.object({
   "emergencyContactPhone": zod.string().nullish(),
   "emergencyToken": zod.string(),
   "preferredLanguage": zod.string().optional(),
+  "hasDispensePin": zod.boolean().describe('Whether a manual-dispense PIN has been set for this patient yet.'),
   "createdAt": zod.coerce.date().optional()
 })
 
@@ -164,6 +166,7 @@ export const GetPatientResponse = zod.object({
   "emergencyContactPhone": zod.string().nullish(),
   "emergencyToken": zod.string(),
   "preferredLanguage": zod.string().optional(),
+  "hasDispensePin": zod.boolean().describe('Whether a manual-dispense PIN has been set for this patient yet.'),
   "createdAt": zod.coerce.date().optional()
 })
 
@@ -197,6 +200,39 @@ export const UpdatePatientResponse = zod.object({
   "emergencyContactPhone": zod.string().nullish(),
   "emergencyToken": zod.string(),
   "preferredLanguage": zod.string().optional(),
+  "hasDispensePin": zod.boolean().describe('Whether a manual-dispense PIN has been set for this patient yet.'),
+  "createdAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Set or change the patient's manual-dispense PIN
+ */
+export const SetDispensePinParams = zod.object({
+  "patientId": zod.coerce.number()
+})
+
+export const setDispensePinBodyPinMin = 4;
+export const setDispensePinBodyPinMax = 6;
+
+
+
+export const SetDispensePinBody = zod.object({
+  "pin": zod.string().min(setDispensePinBodyPinMin).max(setDispensePinBodyPinMax).describe('4-6 digit PIN used to authorize manual dispenses from the device.')
+})
+
+export const SetDispensePinResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "dateOfBirth": zod.coerce.date(),
+  "bloodType": zod.string(),
+  "conditions": zod.array(zod.string()),
+  "allergies": zod.array(zod.string()),
+  "emergencyContactName": zod.string().nullish(),
+  "emergencyContactPhone": zod.string().nullish(),
+  "emergencyToken": zod.string(),
+  "preferredLanguage": zod.string().optional(),
+  "hasDispensePin": zod.boolean().describe('Whether a manual-dispense PIN has been set for this patient yet.'),
   "createdAt": zod.coerce.date().optional()
 })
 

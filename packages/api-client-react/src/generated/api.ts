@@ -53,6 +53,7 @@ import type {
   Schedule,
   ScheduleInput,
   ScheduleUpdate,
+  SetDispensePinInput,
   SuccessResponse,
   TrendFlag,
   User,
@@ -819,6 +820,78 @@ export const useUpdatePatient = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdatePatientMutationOptions(options));
+    }
+
+export const getSetDispensePinUrl = (patientId: number,) => {
+
+
+
+
+  return `/api/patients/${patientId}/dispense-pin`
+}
+
+/**
+ * @summary Set or change the patient's manual-dispense PIN
+ */
+export const setDispensePin = async (patientId: number,
+    setDispensePinInput: SetDispensePinInput, options?: RequestInit): Promise<Patient> => {
+
+  return customFetch<Patient>(getSetDispensePinUrl(patientId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(setDispensePinInput)
+  }
+);}
+
+
+
+
+
+export const getSetDispensePinMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDispensePin>>, TError,{patientId: number;data: BodyType<SetDispensePinInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setDispensePin>>, TError,{patientId: number;data: BodyType<SetDispensePinInput>}, TContext> => {
+
+const mutationKey = ['setDispensePin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDispensePin>>, {patientId: number;data: BodyType<SetDispensePinInput>}> = (props) => {
+          const {patientId,data} = props ?? {};
+
+          return  setDispensePin(patientId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetDispensePinMutationResult = NonNullable<Awaited<ReturnType<typeof setDispensePin>>>
+    export type SetDispensePinMutationBody = BodyType<SetDispensePinInput>
+    export type SetDispensePinMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Set or change the patient's manual-dispense PIN
+ */
+export const useSetDispensePin = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDispensePin>>, TError,{patientId: number;data: BodyType<SetDispensePinInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setDispensePin>>,
+        TError,
+        {patientId: number;data: BodyType<SetDispensePinInput>},
+        TContext
+      > => {
+      return useMutation(getSetDispensePinMutationOptions(options));
     }
 
 export const getListPatientCaregiversUrl = (patientId: number,) => {

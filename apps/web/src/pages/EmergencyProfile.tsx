@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Readout } from "@/components/ui/readout";
 import { ShieldAlert, Phone, AlertTriangle, Activity, Pill, User, BadgeCheck } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function EmergencyProfile() {
   const { token } = useParams<{ token: string }>();
@@ -20,7 +21,7 @@ export default function EmergencyProfile() {
       <div className="min-h-screen bg-panel-ink text-[#F5F8F6] p-6 flex flex-col items-center justify-center gap-4" aria-busy="true" aria-label="Loading emergency profile">
         <div className="relative">
           <div className="absolute inset-0 bg-gintong-digit/20 blur-2xl rounded-full" />
-          <ShieldAlert className="w-14 h-14 text-gintong-digit relative animate-pulse" />
+          <Spinner className="w-14 h-14 text-gintong-digit relative" />
         </div>
         <div className="text-lg font-heading font-semibold tracking-wide">Accessing medical profile…</div>
         <div className="text-sm text-[#F5F8F6]/50 font-mono uppercase tracking-widest">Verifying secure link</div>
@@ -167,7 +168,7 @@ export default function EmergencyProfile() {
         </Card>
 
         <div className="text-center text-[#F5F8F6]/30 text-xs font-semibold mt-10 uppercase tracking-[0.2em]">
-          Provided by PULSO · MediTrack Pro Medical IoT System
+          MediTrack Pro · Medical IoT System
         </div>
       </div>
     </div>

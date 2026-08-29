@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useApp } from "@/contexts/AppContext";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Activity, Clock, Settings, HeartPulse, LogOut,
+  Activity, Clock, Settings, Pill, LogOut,
   LayoutDashboard, QrCode, ChevronDown, Check, UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-    { icon: HeartPulse, label: "Medications", href: `/patients/${patientId}/medications` },
+    { icon: Pill, label: "Medications", href: `/patients/${patientId}/medications` },
     { icon: Activity, label: "Dispenser", href: `/patients/${patientId}/dispenser` },
     { icon: Clock, label: "Adherence", href: `/patients/${patientId}/adherence` },
     { icon: QrCode, label: "Emergency QR", href: `/patients/${patientId}/emergency-qr` },
@@ -51,11 +51,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row font-sans">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-72 bg-card border-r shadow-sm">
+      <aside className="hidden md:flex flex-col w-72 bg-card border-r shadow-sm print:hidden">
         <div className="p-6 border-b">
-          <Link href="/dashboard">
-            <Logo markSize="md" textClassName="text-xl" />
-          </Link>
+          <Logo href="/dashboard" markSize="md" textClassName="text-xl" />
         </div>
 
         {patients && patients.length > 0 && (
@@ -143,10 +141,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between p-4 bg-card border-b z-20">
-          <Link href="/dashboard">
-            <Logo markSize="sm" textClassName="text-lg" />
-          </Link>
+        <header className="md:hidden flex items-center justify-between p-4 bg-card border-b z-20 print:hidden">
+          <Logo href="/dashboard" markSize="sm" textClassName="text-lg" />
           <div className="flex items-center gap-1">
             {patients && patients.length > 1 && (
               <DropdownMenu>
@@ -181,15 +177,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 pb-24 md:pb-12">
-          <div className="max-w-6xl mx-auto w-full">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 pb-24 md:pb-12 print:p-0 print:overflow-visible">
+          <div className="max-w-6xl mx-auto w-full print:max-w-none">
             {children}
           </div>
         </div>
       </main>
 
       {/* Mobile Bottom Nav — 5 primary destinations; Settings lives in the header above instead of a 6th cramped tab */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t flex justify-around p-2 pb-safe z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t flex justify-around p-2 pb-safe z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] print:hidden">
         {navItems.filter((item) => item.label !== "Settings").map((item) => {
           const isActive = location.startsWith(item.href) && (item.href !== "/dashboard" || location === "/dashboard");
           return (

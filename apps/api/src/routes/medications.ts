@@ -89,7 +89,6 @@ function computeNextDoseAt(schedule: typeof schedulesTable.$inferSelect): string
   return null;
 }
 
-// List medications
 router.get("/patients/:patientId/medications", async (req, res): Promise<void> => {
   const params = ListMedicationsParams.safeParse(req.params);
   if (!params.success) {
@@ -101,7 +100,6 @@ router.get("/patients/:patientId/medications", async (req, res): Promise<void> =
   res.json(meds.map(m => serializeMedication(m)));
 });
 
-// Create medication
 router.post("/patients/:patientId/medications", async (req, res): Promise<void> => {
   const params = CreateMedicationParams.safeParse(req.params);
   if (!params.success) {
@@ -143,7 +141,6 @@ router.post("/patients/:patientId/medications", async (req, res): Promise<void> 
   res.status(201).json(serializeMedication(med));
 });
 
-// Get medication
 router.get("/patients/:patientId/medications/:medicationId", async (req, res): Promise<void> => {
   const params = GetMedicationParams.safeParse(req.params);
   if (!params.success) {
@@ -162,7 +159,6 @@ router.get("/patients/:patientId/medications/:medicationId", async (req, res): P
   res.json(serializeMedication(med));
 });
 
-// Update medication
 router.patch("/patients/:patientId/medications/:medicationId", async (req, res): Promise<void> => {
   const params = UpdateMedicationParams.safeParse(req.params);
   if (!params.success) {
@@ -186,7 +182,6 @@ router.patch("/patients/:patientId/medications/:medicationId", async (req, res):
   res.json(serializeMedication(med));
 });
 
-// Delete medication
 router.delete("/patients/:patientId/medications/:medicationId", async (req, res): Promise<void> => {
   const params = DeleteMedicationParams.safeParse(req.params);
   if (!params.success) {
@@ -200,7 +195,6 @@ router.delete("/patients/:patientId/medications/:medicationId", async (req, res)
   res.json({ success: true, message: "Medication deleted." });
 });
 
-// Schedules
 router.get("/patients/:patientId/medications/:medicationId/schedules", async (req, res): Promise<void> => {
   const params = ListSchedulesParams.safeParse(req.params);
   if (!params.success) {

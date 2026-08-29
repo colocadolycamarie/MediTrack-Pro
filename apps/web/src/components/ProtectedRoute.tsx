@@ -3,26 +3,30 @@ import { useLocation } from "wouter";
 import { useListPatients, getListPatientsQueryKey } from "@meditrack/api-client-react";
 import { useApp } from "@/contexts/AppContext";
 import { ShieldAlert } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 function FullScreenLoader() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-      <div className="bg-primary text-primary-foreground p-3 rounded-2xl animate-pulse">
-        <ShieldAlert className="w-8 h-8" />
-      </div>
+      <Spinner className="size-8 text-muted-foreground" />
       <p className="text-muted-foreground font-medium">Loading your account…</p>
     </div>
   );
 }
 
 /**
- * Wraps every authenticated screen. Handles three concerns that previously
- * had no real implementation:
+ * Wraps every authenticated screen. Handles three concerns:
  *  1. Redirect to /login if there's no session at all.
  *  2. Redirect brand-new caregivers with zero linked patients to onboarding
  *     instead of showing a broken dashboard for a patient they don't own.
  *  3. Keep the active patient in sync with what the caregiver actually has
  *     access to (falls back to the first patient if the stored id is stale).
+ *
+ * Important: /onboarding/add-patient (requirePatient=false) is reachable in
+ * two situations — brand-new caregivers with zero patients, AND existing
+ * caregivers deliberately adding another patient from the sidebar. This
+ * component must never force caregivers who already have patients away from
+ * that route, or "Add another patient" breaks.
  */
 export function ProtectedRoute({ children, requirePatient = true }: { children: React.ReactNode; requirePatient?: boolean }) {
   const [location, setLocation] = useLocation();
@@ -40,19 +44,15 @@ export function ProtectedRoute({ children, requirePatient = true }: { children: 
 
   useEffect(() => {
     if (!patients) return;
-    if (patients.length === 0) {
-      if (requirePatient && location !== "/onboarding/add-patient") {
-        setLocation("/onboarding/add-patient");
+    if (requirePatient && patients.length === 0 && location !== "/onboarding/add-patient") {
+      setLocation("/onboarding/add-patient");
+      return;
+    }
+    if (patients.length > 0) {
+      const stillValid = patients.some((p) => p.id === patientId);
+      if (!stillValid) {
+        setPatientId(patients[0].id);
       }
-      return;
-    }
-    if (patients.length > 0 && location === "/onboarding/add-patient") {
-      setLocation("/dashboard");
-      return;
-    }
-    const stillValid = patients.some((p) => p.id === patientId);
-    if (!stillValid) {
-      setPatientId(patients[0].id);
     }
   }, [patients, patientId, setPatientId, location, setLocation, requirePatient]);
 
@@ -77,8 +77,9 @@ export function ProtectedRoute({ children, requirePatient = true }: { children: 
   }
 
   if (!requirePatient) {
-    // Onboarding screen: just needs auth to have resolved.
-    if (patients && patients.length > 0) return <FullScreenLoader />; // redirecting to /dashboard
+    // Onboarding / "add another patient" screen: just needs auth + the
+    // patients list to have resolved. Landing here with existing patients
+    // is expected (adding another one), so we render normally either way.
     return <>{children}</>;
   }
 

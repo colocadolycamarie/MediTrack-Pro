@@ -84,12 +84,10 @@ router.get("/patients/:patientId/dashboard", requireAuth, async (req, res): Prom
   const events = await db.select().from(doseEventsTable)
     .where(eq(doseEventsTable.patientId, params.data.patientId));
 
-  // Compute adherence
   const taken = events.filter(e => e.status === "taken").length;
   const total = events.length;
   const adherenceRate = total > 0 ? Math.round((taken / total) * 100) : 100;
 
-  // Streak
   let streak = 0;
   const today = new Date();
   for (let i = 0; i < 30; i++) {
@@ -102,7 +100,6 @@ router.get("/patients/:patientId/dashboard", requireAuth, async (req, res): Prom
     if (dayEvents.length > 0) streak++;
   }
 
-  // Today's doses
   const dosesTakenToday = todaysEvents.filter(e => e.status === "taken").length;
 
   // Upcoming doses — now real DoseEvent rows, so `doseEventId` can actually be confirmed
@@ -122,11 +119,9 @@ router.get("/patients/:patientId/dashboard", requireAuth, async (req, res): Prom
     };
   }).sort((a, b) => a.minutesUntilDue - b.minutesUntilDue);
 
-  // Next dose
   const futureDoses = upcomingDoses.filter(d => d.status === "pending" && d.minutesUntilDue >= 0);
   const nextDose = futureDoses[0] ?? null;
 
-  // Stock alerts
   const stockAlerts = meds
     .filter(m => m.stockCount <= 5 || m.stockCount / (m.stockCapacity ?? 30) < 0.2)
     .map(m => ({
@@ -135,7 +130,6 @@ router.get("/patients/:patientId/dashboard", requireAuth, async (req, res): Prom
       funnelNumber: m.funnelNumber,
     }));
 
-  // Trend flags (simple)
   const trendFlags = [];
   const weekendMissed = events.filter(e => {
     const day = new Date(e.scheduledAt).getDay();
@@ -169,7 +163,6 @@ router.get("/patients/:patientId/dashboard", requireAuth, async (req, res): Prom
   });
 });
 
-// Emergency QR endpoints
 router.get("/patients/:patientId/emergency-qr", requireAuth, async (req, res): Promise<void> => {
   const params = GetEmergencyQrParams.safeParse(req.params);
   if (!params.success) {

@@ -11,7 +11,7 @@ export function Readout({ value, label, size = "md", className, ...props }: Read
   return (
     <div
       className={cn(
-        "bg-black/20 rounded-2xl shadow-[inset_0_1px_6px_rgba(0,0,0,0.3)] border border-white/10 flex flex-col items-center justify-center gap-1.5 p-4 md:p-5",
+        "bg-panel-ink rounded-2xl shadow-[inset_0_1px_6px_rgba(0,0,0,0.3)] border border-white/10 flex flex-col items-center justify-center gap-1.5 p-4 md:p-5",
         className
       )}
       {...props}

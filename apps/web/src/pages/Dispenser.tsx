@@ -38,7 +38,7 @@ export default function Dispenser() {
   const { data: devices, isLoading: devicesLoading } = useListDevices(patientId);
   const deviceId = devices?.[0]?.id;
 
-  const { data: device, isLoading: deviceLoading } = useGetDevice(patientId, deviceId ?? 0, {
+  const { data: device, isLoading: deviceLoading, refetch: refetchDevice, isFetching: isRefreshingDevice } = useGetDevice(patientId, deviceId ?? 0, {
     query: { queryKey: getGetDeviceQueryKey(patientId, deviceId ?? 0), enabled: deviceId != null },
   });
 
@@ -138,13 +138,10 @@ export default function Dispenser() {
         </div>
         <Card className="border-dashed">
           <CardContent className="p-12 flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
-              <Power className="w-8 h-8" />
-            </div>
             <div>
               <h2 className="text-xl font-semibold font-heading">No dispenser paired yet</h2>
               <p className="text-muted-foreground mt-1 max-w-sm">
-                Pair a PULSO base unit to enable automatic dispensing, funnel monitoring, and manual overrides.
+                Pair a MediTrack dispenser to enable automatic dispensing, funnel monitoring, and manual overrides.
               </p>
             </div>
             <Button className="mt-2 h-12 px-6" onClick={() => setIsPairModalOpen(true)}>Pair a Device</Button>
@@ -154,7 +151,7 @@ export default function Dispenser() {
         <Dialog open={isPairModalOpen} onOpenChange={setIsPairModalOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Pair a PULSO Dispenser</DialogTitle>
+              <DialogTitle>Pair a Dispenser</DialogTitle>
               <DialogDescription>
                 Find the device code printed on the base unit, then enter the Wi-Fi network it should join.
               </DialogDescription>
@@ -219,7 +216,7 @@ export default function Dispenser() {
               <Power className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="text-2xl font-heading font-semibold text-gintong-digit">{device?.nickname || "PULSO Base Unit"}</h2>
+              <h2 className="text-2xl font-heading font-semibold text-gintong-digit">{device?.nickname || "MediTrack Dispenser"}</h2>
               <div className="flex items-center gap-4 mt-2 flex-wrap">
                 <Badge variant={device?.status === 'online' ? 'success' : 'destructive'} className="uppercase">
                   {device?.status || 'Unknown'}
@@ -238,8 +235,15 @@ export default function Dispenser() {
               </div>
               <div className="font-mono font-bold text-lg text-gintong-digit">{device?.wifiStrength || 85}%</div>
             </div>
-            <Button variant="outline" size="icon" className="h-auto w-14 shrink-0 rounded-xl bg-white/5 border-white/15 text-gintong-digit hover:bg-white/10 hover:text-gintong-digit">
-              <RefreshCw className="w-5 h-5" />
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-auto w-14 shrink-0 rounded-xl bg-white/5 border-white/15 text-gintong-digit hover:bg-white/10 hover:text-gintong-digit"
+              onClick={() => refetchDevice()}
+              disabled={isRefreshingDevice}
+              aria-label="Refresh signal status"
+            >
+              <RefreshCw className={`w-5 h-5 ${isRefreshingDevice ? "animate-spin" : ""}`} />
             </Button>
           </div>
         </div>

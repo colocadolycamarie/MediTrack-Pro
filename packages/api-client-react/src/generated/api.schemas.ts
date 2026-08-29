@@ -145,6 +145,8 @@ export interface Patient {
   emergencyContactPhone?: string | null;
   emergencyToken: string;
   preferredLanguage?: string;
+  /** Whether a manual-dispense PIN has been set for this patient yet. */
+  hasDispensePin: boolean;
   createdAt?: string;
 }
 
@@ -355,6 +357,15 @@ export interface DevicePairInput {
   ssid: string;
   wifiPassword: string;
   nickname?: string;
+}
+
+export interface SetDispensePinInput {
+  /**
+     * 4-6 digit PIN used to authorize manual dispenses from the device.
+     * @minLength 4
+     * @maxLength 6
+     */
+  pin: string;
 }
 
 export interface DispenseInput {

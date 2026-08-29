@@ -14,6 +14,7 @@ export const patientsTable = pgTable("patients", {
   emergencyContactPhone: text("emergency_contact_phone"),
   emergencyToken: text("emergency_token").notNull(),
   preferredLanguage: text("preferred_language").notNull().default("en"),
+  dispensePinHash: text("dispense_pin_hash"), // bcrypt hash; null until the caregiver sets one in Settings
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

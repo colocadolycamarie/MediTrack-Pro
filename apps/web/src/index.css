@@ -229,8 +229,8 @@
 }
 
 /* Every status color in the app must be paired with an icon or label per
-   PULSO's accessibility spec — but on top of that, make focus state visible
-   and consistent everywhere, and respect users who've asked for less motion. */
+   MediTrack Pro's accessibility spec — but on top of that, make focus state
+   visible and consistent everywhere, and respect users who've asked for less motion. */
 :focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;

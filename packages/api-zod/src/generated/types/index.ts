@@ -66,6 +66,7 @@ export * from './scheduleInputTimeType';
 export * from './scheduleTimeType';
 export * from './scheduleUpdate';
 export * from './scheduleUpdateTimeType';
+export * from './setDispensePinInput';
 export * from './successResponse';
 export * from './trendFlag';
 export * from './trendFlagSeverity';

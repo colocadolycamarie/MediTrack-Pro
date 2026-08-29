@@ -19,5 +19,7 @@ export interface Patient {
   emergencyContactPhone?: string | null;
   emergencyToken: string;
   preferredLanguage?: string;
+  /** Whether a manual-dispense PIN has been set for this patient yet. */
+  hasDispensePin: boolean;
   createdAt?: Date;
 }

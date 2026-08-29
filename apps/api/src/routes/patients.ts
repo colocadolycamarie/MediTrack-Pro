@@ -6,18 +6,26 @@ import {
   UpdatePatientBody,
   GetPatientParams,
   UpdatePatientParams,
+  SetDispensePinBody,
+  SetDispensePinParams,
   InviteCaregiverParams,
   InviteCaregiverBody,
   RemoveCaregiverParams,
   ListPatientCaregiversParams,
 } from "@meditrack/api-zod";
 import { randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
 
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
 router.use(requireAuth);
+
+// Same work factor as user password hashing (see auth.ts) — a caregiver PIN
+// gates a real-world action (dispensing medication), so it deserves the same
+// slow, salted hashing as an account password rather than plaintext storage.
+const BCRYPT_COST = 12;
 
 /** True if `userId` owns the patient record or is an accepted caregiver on it. */
 export async function canAccessPatient(userId: number, patientId: number): Promise<boolean> {
@@ -48,6 +56,7 @@ function serializePatient(p: typeof patientsTable.$inferSelect) {
     emergencyContactPhone: p.emergencyContactPhone,
     emergencyToken: p.emergencyToken,
     preferredLanguage: p.preferredLanguage,
+    hasDispensePin: Boolean(p.dispensePinHash),
     createdAt: p.createdAt,
   };
 }
@@ -144,6 +153,39 @@ router.patch("/patients/:patientId", async (req, res): Promise<void> => {
 
   const [patient] = await db.update(patientsTable)
     .set(updateData)
+    .where(eq(patientsTable.id, params.data.patientId))
+    .returning();
+
+  if (!patient) {
+    res.status(404).json({ error: "Patient not found." });
+    return;
+  }
+
+  res.json(serializePatient(patient));
+});
+
+router.put("/patients/:patientId/dispense-pin", async (req, res): Promise<void> => {
+  const params = SetDispensePinParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  if (!(await canAccessPatient(req.userId!, params.data.patientId))) {
+    res.status(404).json({ error: "Patient not found." });
+    return;
+  }
+
+  const parsed = SetDispensePinBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const dispensePinHash = await bcrypt.hash(parsed.data.pin, BCRYPT_COST);
+
+  const [patient] = await db.update(patientsTable)
+    .set({ dispensePinHash })
     .where(eq(patientsTable.id, params.data.patientId))
     .returning();
 

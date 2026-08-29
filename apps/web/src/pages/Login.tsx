@@ -52,81 +52,72 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
-      <AuthSidePanel
-        backHref="/"
-        backLabel="Back to site"
-        heading={<>Every dose,<br className="hidden sm:block" /> on schedule.</>}
-        subcopy="Sign in to see today's dosing schedule, device status, and adherence — the way your caregiver dashboard left it."
-      />
+    <AuthSidePanel
+      heading={<>Every dose,<br className="hidden sm:block" /> on schedule.</>}
+      subcopy="Sign in to see today's dosing schedule, device status, and adherence — the way your caregiver dashboard left it."
+    >
+      <h2 className="text-2xl font-heading font-semibold text-foreground">Welcome back</h2>
+      <p className="text-muted-foreground mt-1.5 mb-6">Sign in with the email you registered.</p>
 
-      {/* Right — the actual form. Full-height, no floating card. */}
-      <div className="flex-1 flex items-center justify-center px-6 py-10 md:px-12">
-        <div className="w-full max-w-sm text-center">
-          <h2 className="text-3xl sm:text-4xl font-heading font-semibold text-foreground">Welcome back</h2>
-          <p className="text-muted-foreground mt-2 mb-9 text-lg">Sign in with the email you registered.</p>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 text-left" noValidate>
+          <AnimatePresence>
+            {formError && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, height: "auto", marginBottom: 4 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ duration: 0.2 }}
+                role="alert"
+                className="flex items-start gap-2 bg-destructive/10 border border-destructive/30 text-destructive text-sm font-medium rounded-lg p-3 overflow-hidden"
+              >
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                {formError}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" autoComplete="email" placeholder="email@example.com" className="h-11" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Password</FormLabel>
+                  <Link href="/forgot-password" className="text-sm font-semibold text-primary hover:underline">
+                    Forgot?
+                  </Link>
+                </div>
+                <FormControl>
+                  <PasswordInput autoComplete="current-password" placeholder="••••••••" className="h-11" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 text-left" noValidate>
-              <AnimatePresence>
-                {formError && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    animate={{ opacity: 1, height: "auto", marginBottom: 4 }}
-                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    transition={{ duration: 0.2 }}
-                    role="alert"
-                    className="flex items-start gap-2 bg-destructive/10 border border-destructive/30 text-destructive text-sm font-medium rounded-lg p-3 overflow-hidden"
-                  >
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    {formError}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-lg">Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" autoComplete="email" placeholder="email@example.com" className="h-14 text-lg" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-lg">Password</FormLabel>
-                      <Link href="/forgot-password" className="text-sm font-semibold text-primary hover:underline">
-                        Forgot?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <PasswordInput autoComplete="current-password" placeholder="••••••••" className="h-14 text-lg" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <Button type="submit" className="w-full h-11 mt-1 gap-2" disabled={loginMut.isPending}>
+            {loginMut.isPending && <Spinner className="size-4" />}
+            {loginMut.isPending ? "Signing in…" : "Sign In"}
+          </Button>
+        </form>
+      </Form>
 
-              <Button type="submit" className="w-full h-14 text-lg mt-2 gap-2" disabled={loginMut.isPending}>
-                {loginMut.isPending && <Spinner className="size-4" />}
-                {loginMut.isPending ? "Signing in…" : "Sign In"}
-              </Button>
-            </form>
-          </Form>
-
-          <p className="text-center mt-8 text-muted-foreground text-lg">
-            Don't have an account? <Link href="/register" className="text-primary font-bold hover:underline">Create one</Link>
-          </p>
-        </div>
-      </div>
-    </div>
+      <p className="text-center mt-6 text-muted-foreground text-sm">
+        Don't have an account? <Link href="/register" className="text-primary font-bold hover:underline">Create one</Link>
+      </p>
+    </AuthSidePanel>
   );
 }

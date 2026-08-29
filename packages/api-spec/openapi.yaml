@@ -228,6 +228,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/Patient"
 
+  # ── Dispenser PIN ──────────────────────────────────────────
+  /patients/{patientId}/dispense-pin:
+    put:
+      operationId: setDispensePin
+      tags: [patients]
+      summary: Set or change the patient's manual-dispense PIN
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetDispensePinInput"
+      responses:
+        "200":
+          description: PIN set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+
   # ── Caregivers ─────────────────────────────────────────────
   /patients/{patientId}/caregivers:
     get:
@@ -649,6 +675,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "428":
+          description: No dispense PIN has been set for this patient yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /patients/{patientId}/devices/{deviceId}/logs:
     get:
@@ -1059,7 +1091,7 @@ components:
 
     Patient:
       type: object
-      required: [id, name, dateOfBirth, bloodType, conditions, allergies, emergencyToken]
+      required: [id, name, dateOfBirth, bloodType, conditions, allergies, emergencyToken, hasDispensePin]
       properties:
         id:
           type: integer
@@ -1086,6 +1118,9 @@ components:
           type: string
         preferredLanguage:
           type: string
+        hasDispensePin:
+          type: boolean
+          description: Whether a manual-dispense PIN has been set for this patient yet.
         createdAt:
           type: string
           format: date-time
@@ -1292,6 +1327,16 @@ components:
           type: string
         nickname:
           type: string
+
+    SetDispensePinInput:
+      type: object
+      required: [pin]
+      properties:
+        pin:
+          type: string
+          description: 4-6 digit PIN used to authorize manual dispenses from the device.
+          minLength: 4
+          maxLength: 6
 
     DispenseInput:
       type: object

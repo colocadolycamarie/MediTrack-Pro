@@ -48,7 +48,7 @@ const AlertDialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      'flex flex-col space-y-2 text-center sm:text-left',
+      'flex flex-col space-y-2 text-center',
       className,
     )}
     {...props}
@@ -62,7 +62,7 @@ const AlertDialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
+      'flex flex-row gap-2 [&>*]:flex-1',
       className,
     )}
     {...props}
@@ -76,7 +76,7 @@ const AlertDialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Title
     ref={ref}
-    className={cn('text-lg font-semibold', className)}
+    className={cn('text-lg font-semibold text-center', className)}
     {...props}
   />
 ));
