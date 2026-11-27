@@ -13,7 +13,7 @@ const sizeMap = {
 };
 
 /**
- * DoseMate brand mark — the dispenser + smartwatch + QR icon.
+ * DoseMate brand mark.
  * Rendered plainly (no extra chip/background) since the artwork already
  * carries its own panel, so it drops cleanly onto dark or light surfaces.
  */

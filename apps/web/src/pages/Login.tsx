@@ -54,7 +54,7 @@ export default function Login() {
   return (
     <AuthSidePanel
       heading={<>Every dose,<br className="hidden sm:block" /> on schedule.</>}
-      subcopy="Sign in to see today's dosing schedule, device status, and adherence — the way your caregiver dashboard left it."
+      subcopy="Sign in to see today's dosing schedule and adherence — the way your caregiver dashboard left it."
     >
       <h2 className="text-2xl font-heading font-semibold text-foreground">Welcome back</h2>
       <p className="text-muted-foreground mt-1.5 mb-6">Sign in with the email you registered.</p>

@@ -7,9 +7,6 @@ import {
   getListPatientCaregiversQueryKey,
   useInviteCaregiver,
   useRemoveCaregiver,
-  useGetPatient,
-  getGetPatientQueryKey,
-  useSetDispensePin,
   CaregiverInviteInputAccessLevel,
   type NotificationSettings,
 } from "@dosemate/api-client-react";
@@ -24,12 +21,11 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Bell, Smartphone, Globe, Eye, UserCog, AlertCircle, Plus, Trash2, Mail, Clock, KeyRound, Check, ShieldCheck } from "lucide-react";
+import { Bell, Smartphone, Globe, Eye, UserCog, AlertCircle, Trash2, Mail, Clock, ShieldCheck } from "lucide-react";
 import { PrivacyDataPanel } from "@/components/PrivacyDataPanel";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
 
 type SettingsTab = "preferences" | "accessibility" | "notifications" | "care-circle" | "privacy";
 
@@ -44,36 +40,7 @@ const TABS: { id: SettingsTab; label: string; icon: typeof Globe }[] = [
 export default function Settings() {
   const { patientId, language, setLanguage, largerTextEnabled, setLargerTextEnabled, highContrastEnabled, setHighContrastEnabled, t } = useApp();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<SettingsTab>("preferences");
-
-  const { data: patient } = useGetPatient(patientId, {
-    query: { queryKey: getGetPatientQueryKey(patientId) },
-  });
-  const setPinMut = useSetDispensePin();
-  const [pinValue, setPinValue] = useState("");
-  const [pinError, setPinError] = useState<string | null>(null);
-
-  const handleSetPin = () => {
-    setPinError(null);
-    if (!/^\d{4,6}$/.test(pinValue)) {
-      setPinError("PIN must be 4-6 digits.");
-      return;
-    }
-    setPinMut.mutate(
-      { patientId, data: { pin: pinValue } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetPatientQueryKey(patientId) });
-          setPinValue("");
-          toast({ title: "Dispenser PIN saved", description: "Use it on the device to authorize manual dispenses." });
-        },
-        onError: (err: unknown) => {
-          setPinError(err instanceof Error ? err.message : "Couldn't save the PIN. Try again.");
-        },
-      },
-    );
-  };
 
   const { data: settings } = useGetNotificationSettings(patientId, {
     query: { queryKey: getGetNotificationSettingsQueryKey(patientId) },
@@ -143,19 +110,19 @@ export default function Settings() {
             <Card>
               <CardHeader>
                 <CardTitle>Language & Region</CardTitle>
-                <CardDescription>Choose the primary language for the device and dashboard.</CardDescription>
+                <CardDescription>Choose the language used across the dashboard.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-0.5">
                     <Label className="text-base">System Language</Label>
-                    <p className="text-sm text-muted-foreground">Applies to UI and voice alerts.</p>
+                    <p className="text-sm text-muted-foreground">Applies to labels and messages in the app.</p>
                   </div>
                   <Select
                     value={language}
                     onValueChange={(val: "en" | "fil") => handleToggle("language", val)}
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[180px]">
                       <SelectValue placeholder="Select Language" />
                     </SelectTrigger>
                     <SelectContent>
@@ -164,46 +131,6 @@ export default function Settings() {
                     </SelectContent>
                   </Select>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === "preferences" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Dispenser PIN</CardTitle>
-                <CardDescription>
-                  Required to authorize a manual dispense directly from the device.
-                  {patient?.hasDispensePin && (
-                    <Badge variant="secondary" className="ml-2 gap-1 align-middle"><Check className="w-3 h-3" /> PIN set</Badge>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!patient?.hasDispensePin && (
-                  <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-lg p-3">
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                    No PIN is set yet — manual dispensing from the device is blocked until you set one.
-                  </div>
-                )}
-                <div className="flex flex-row gap-3 items-end">
-                  <div className="space-y-1.5 flex-1 max-w-48">
-                    <Label htmlFor="dispense-pin">{patient?.hasDispensePin ? "New PIN" : "Set a PIN"}</Label>
-                    <Input
-                      id="dispense-pin"
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      placeholder="4-6 digits"
-                      value={pinValue}
-                      onChange={(e) => setPinValue(e.target.value.replace(/\D/g, ""))}
-                    />
-                  </div>
-                  <Button onClick={handleSetPin} disabled={setPinMut.isPending || pinValue.length === 0}>
-                    {setPinMut.isPending ? "Saving…" : patient?.hasDispensePin ? "Update PIN" : "Set PIN"}
-                  </Button>
-                </div>
-                {pinError && <p className="text-sm text-destructive font-medium">{pinError}</p>}
               </CardContent>
             </Card>
           )}
@@ -249,7 +176,7 @@ export default function Settings() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5 max-w-[70%]">
                     <Label className="text-base flex items-center gap-2"><Smartphone className="w-4 h-4" /> Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive alerts on your browser and smartwatch.</p>
+                    <p className="text-sm text-muted-foreground">Receive reminders and alerts on your browser.</p>
                   </div>
                   <Switch
                     checked={localSettings?.pushEnabled ?? true}
@@ -259,7 +186,7 @@ export default function Settings() {
                 <div className="flex items-center justify-between border-t pt-6">
                   <div className="space-y-0.5 max-w-[70%]">
                     <Label className="text-base flex items-center gap-2 text-destructive"><AlertCircle className="w-4 h-4" /> Critical SMS Alerts</Label>
-                    <p className="text-sm text-muted-foreground">Fallback SMS text messages for missed doses or device offline status.</p>
+                    <p className="text-sm text-muted-foreground">Text messages as a fallback for missed doses.</p>
                   </div>
                   <Switch
                     checked={localSettings?.smsEnabled ?? true}
@@ -329,13 +256,13 @@ function CareCircleTab({ patientId }: { patientId: number }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
           <CardTitle>Care Circle</CardTitle>
           <CardDescription>Everyone who can view and manage this patient's medications.</CardDescription>
         </div>
-        <Button size="sm" onClick={() => setIsInviting(true)} className="shrink-0">
-          <Plus className="w-4 h-4 mr-1.5" /> Invite
+        <Button size="sm" onClick={() => setIsInviting(true)} className="shrink-0 self-start">
+          Invite
         </Button>
       </CardHeader>
       <CardContent>
@@ -385,7 +312,7 @@ function CareCircleTab({ patientId }: { patientId: number }) {
         ) : (
           <div className="divide-y">
             {caregivers.map((cg) => (
-              <div key={cg.id} className="py-4 flex items-center justify-between gap-4">
+              <div key={cg.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold font-heading shrink-0">
                     {cg.caregiverName?.charAt(0) ?? cg.caregiverEmail?.charAt(0) ?? "?"}
@@ -395,7 +322,7 @@ function CareCircleTab({ patientId }: { patientId: number }) {
                     <div className="text-sm text-muted-foreground truncate">{cg.caregiverEmail}</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 sm:shrink-0 pl-[3.25rem] sm:pl-0">
                   {cg.status === "pending" && (
                     <Badge variant="outline" className="gap-1"><Clock className="w-3 h-3" /> Pending</Badge>
                   )}
@@ -423,7 +350,7 @@ function CareCircleTab({ patientId }: { patientId: number }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove {pendingRemoval?.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              They'll immediately lose access to this patient's medications, schedule, and dispenser controls.
+              They'll immediately lose access to this patient's medications, schedules, and dose history.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

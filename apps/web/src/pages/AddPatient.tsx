@@ -109,7 +109,7 @@ export default function AddPatient() {
           {hasExistingPatients ? "Add a patient" : "Add your first patient"}
         </h1>
         <p className="text-muted-foreground mt-2 max-w-md">
-          Create a profile for the person you're caring for. You can invite caregivers and pair a dispenser later.
+          Create a profile for the person you're caring for. You can invite caregivers and add their medications next.
         </p>
       </div>
 

@@ -11,12 +11,12 @@ import {
   type Medication,
   type Schedule,
 } from "@dosemate/api-client-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, Utensils, Trash2, Plus, AlertCircle } from "lucide-react";
+import { Clock, Utensils, Trash2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +37,13 @@ const MEAL_OPTIONS = [
   { value: "after_lunch", label: "After lunch", approx: "≈ 12:30 PM" },
   { value: "before_dinner", label: "Before dinner", approx: "≈ 5:30 PM" },
   { value: "after_dinner", label: "After dinner", approx: "≈ 6:30 PM" },
+] as const;
+
+const TIME_PRESETS = [
+  { label: "Morning", value: "08:00" },
+  { label: "Noon", value: "12:00" },
+  { label: "Evening", value: "18:00" },
+  { label: "Bedtime", value: "21:00" },
 ] as const;
 
 function formatClock(hhmm: string | null | undefined): string {
@@ -140,21 +147,22 @@ export function ScheduleDialog({ patientId, medication, onClose }: ScheduleDialo
 
   return (
     <Dialog open={medication != null} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[520px] max-h-[90vh] p-0 gap-0 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
         <DialogHeader>
-          <DialogTitle>Dosing schedule — {medication?.name}</DialogTitle>
+          <DialogTitle>Schedule for {medication?.name}</DialogTitle>
           <DialogDescription>
-            {medication?.dosage} · Funnel {medication?.funnelNumber}. Add one entry for each time of day this medicine is taken.
+            {medication?.dosage}. Add one time for each dose you take during the day.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Current schedule</h4>
+          <h4 className="text-sm font-semibold">Current times</h4>
           {isLoading ? (
             <div className="h-14 bg-muted animate-pulse rounded-lg" />
           ) : !schedules || schedules.length === 0 ? (
             <div className="text-sm text-muted-foreground border border-dashed rounded-lg p-4">
-              No times set yet. Until you add one, this medicine won't appear on the dashboard or be dispensed on schedule.
+              No times set yet. Until you add one, this medicine won't show up on the dashboard.
             </div>
           ) : (
             <ul className="divide-y border rounded-lg">
@@ -186,7 +194,7 @@ export function ScheduleDialog({ patientId, medication, onClose }: ScheduleDialo
         </div>
 
         <div className="space-y-4 border-t pt-5">
-          <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Add a time</h4>
+          <h4 className="text-sm font-semibold">Add a time</h4>
 
           <div className="grid grid-cols-2 gap-2" role="group" aria-label="Schedule type">
             {([
@@ -199,7 +207,7 @@ export function ScheduleDialog({ patientId, medication, onClose }: ScheduleDialo
                 aria-pressed={mode === opt.id}
                 onClick={() => setMode(opt.id)}
                 className={cn(
-                  "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                  "flex items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
                   mode === opt.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50",
                 )}
               >
@@ -209,9 +217,25 @@ export function ScheduleDialog({ patientId, medication, onClose }: ScheduleDialo
           </div>
 
           {mode === "clock" ? (
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label htmlFor="schedule-time">Time</Label>
               <Input id="schedule-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="h-11 max-w-40" />
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Quick times">
+                {TIME_PRESETS.map((p) => (
+                  <button
+                    key={p.value}
+                    type="button"
+                    onClick={() => setTime(p.value)}
+                    aria-pressed={time === p.value}
+                    className={cn(
+                      "h-9 px-3 rounded-full border text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                      time === p.value ? "border-primary bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    {p.label} · {formatClock(p.value)}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="space-y-1.5">
@@ -229,7 +253,7 @@ export function ScheduleDialog({ patientId, medication, onClose }: ScheduleDialo
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Meal times use the defaults 7:00 AM breakfast, 12:00 PM lunch and 6:00 PM dinner, shifted 30 minutes before or after.
+                Meals are assumed at 7:00 AM, 12:00 PM and 6:00 PM. "Before" and "after" shift that by 30 minutes.
               </p>
             </div>
           )}
@@ -237,6 +261,17 @@ export function ScheduleDialog({ patientId, medication, onClose }: ScheduleDialo
           <div className="space-y-2">
             <Label>Days</Label>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Days of the week">
+              <button
+                type="button"
+                aria-pressed={days.length === 0}
+                onClick={() => setDays([])}
+                className={cn(
+                  "h-10 px-4 rounded-lg border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                  days.length === 0 ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50",
+                )}
+              >
+                Every day
+              </button>
               {DAYS.map((d) => {
                 const on = days.includes(d.id);
                 return (
@@ -256,7 +291,7 @@ export function ScheduleDialog({ patientId, medication, onClose }: ScheduleDialo
               })}
             </div>
             <p className="text-xs text-muted-foreground">
-              {days.length === 0 ? "No days selected — this will repeat every day." : `Repeats on: ${describeDays(days)}.`}
+              {days.length === 0 ? "Repeats every day. Tap specific days to limit it." : `Repeats on: ${describeDays(days)}.`}
             </p>
           </div>
 
@@ -266,12 +301,16 @@ export function ScheduleDialog({ patientId, medication, onClose }: ScheduleDialo
             </div>
           )}
 
-          <div className="flex justify-end">
-            <Button onClick={handleAdd} disabled={createMut.isPending} className="gap-2">
-              <Plus className="w-4 h-4" /> {createMut.isPending ? "Saving…" : "Add time"}
-            </Button>
-          </div>
+          <Button onClick={handleAdd} disabled={createMut.isPending} variant="secondary" className="w-full h-11">
+            {createMut.isPending ? "Saving…" : "Add this time"}
+          </Button>
         </div>
+
+        </div>
+
+        <DialogFooter className="shrink-0 border-t px-6 py-4">
+          <Button className="w-full sm:w-auto h-11 sm:px-8" onClick={onClose}>Done</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

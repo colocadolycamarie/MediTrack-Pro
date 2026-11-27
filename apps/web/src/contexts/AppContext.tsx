@@ -22,18 +22,16 @@ interface AppContextType {
 const translations: Record<string, Record<Language, string>> = {
   "Take": { en: "Take", fil: "Inumin" },
   "Snooze": { en: "Snooze", fil: "I-snooze" },
-  "Dispense Now": { en: "Dispense Now", fil: "Ilabas Ngayon" },
-  "Taken": { en: "Taken", fil: "Nainom na" },
+    "Taken": { en: "Taken", fil: "Nainom na" },
   "Missed": { en: "Missed", fil: "Napalampas" },
   "Add Medication": { en: "Add Medication", fil: "Magdagdag ng Gamot" },
-  "No medications yet. Add the first one to start the dispensing schedule.": {
-    en: "No medications yet. Add the first one to start the dispensing schedule.",
-    fil: "Wala pang gamot. Magdagdag ng una para simulan ang iskedyul."
+  "No medications yet. Add the first one to start tracking doses.": {
+    en: "No medications yet. Add the first one to start tracking doses.",
+    fil: "Wala pang gamot. Magdagdag ng una para simulan ang pagsubaybay."
   },
   "Dashboard": { en: "Dashboard", fil: "Dashboard" },
   "Medications": { en: "Medications", fil: "Mga Gamot" },
-  "Dispenser": { en: "Dispenser", fil: "Dispenser" },
-  "Adherence": { en: "Adherence", fil: "Pagsunod" },
+    "Adherence": { en: "Adherence", fil: "Pagsunod" },
   "Emergency QR": { en: "Emergency QR", fil: "Emergency QR" },
   "Settings": { en: "Settings", fil: "Mga Setting" },
   "Log Out": { en: "Log Out", fil: "Mag-log Out" },

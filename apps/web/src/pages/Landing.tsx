@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Activity, Scan, Watch } from "lucide-react";
+import { CalendarClock, Scan, Watch } from "lucide-react";
 import { motion } from "framer-motion";
 import { Logo } from "@/components/Logo";
 
@@ -14,27 +14,27 @@ const journey = [
     body: "Conditions, allergies, blood type, emergency contact. This is also what powers the Emergency QR later.",
   },
   {
-    title: "Pair the dispenser",
-    body: "Connect the dispenser to Wi-Fi. It detects its own funnel count automatically — no manual setup.",
+    title: "Add their medications",
+    body: "Name, dosage, form, and how many are left. DoseMate works out how many days of supply remain.",
   },
   {
     title: "Set the dosing schedule",
-    body: "Clock time or meal-relative. From this point, the dispenser, watch, and dashboard all stay in sync on their own.",
+    body: "Pick a set time or tie it to meals, then choose the days. Today's doses appear on the dashboard, ready to tap as taken.",
   },
 ];
 
 const specs = [
   {
     index: "01",
-    icon: Activity,
-    title: "IoT connected, not app-only",
-    body: "The dispenser syncs directly to the cloud over Wi-Fi. Miss a dose and the device beeps, the watch vibrates, and the caregiver gets an alert — in that order, every time.",
+    icon: CalendarClock,
+    title: "Schedules that fit real routines",
+    body: "Set a clock time or tie a dose to breakfast, lunch, or dinner. Choose every day or only certain days, and add as many times as the medicine needs.",
   },
   {
     index: "02",
     icon: Watch,
     title: "The Readout, on every surface",
-    body: "One signature display component — dark, scanlined, warm monospaced digits — renders identically on the web dashboard, the smartwatch face, and the printed emergency card.",
+    body: "One signature display — dark, scanlined, warm monospaced digits — looks the same on the web dashboard, the smartwatch face, and the printed emergency card.",
   },
   {
     index: "03",
@@ -45,10 +45,10 @@ const specs = [
 ];
 
 const stats = [
-  { value: "4", label: "Funnel Slots" },
-  { value: "≤5s", label: "Alert Latency" },
-  { value: "3", label: "Connected Surfaces" },
-  { value: "0", label: "Logins for Emergency Access" },
+  { value: "1 tap", label: "To confirm a dose" },
+  { value: "7 days", label: "Pick any days of the week" },
+  { value: "2 ways", label: "Set a time or tie it to meals" },
+  { value: "0", label: "Logins for emergency access" },
 ];
 
 export default function Landing() {
@@ -69,7 +69,7 @@ export default function Landing() {
           <Logo markSize="lg" textClassName="text-2xl" />
           <nav aria-label="Page sections" className="hidden lg:flex items-center gap-8 font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
-            <a href="#the-system" className="hover:text-foreground transition-colors">The system</a>
+            <a href="#the-system" className="hover:text-foreground transition-colors">Features</a>
             <a href="#proof" className="hover:text-foreground transition-colors">Our approach</a>
           </nav>
           <div className="flex gap-4 items-center">
@@ -124,7 +124,7 @@ export default function Landing() {
 
             <div className="mt-9 border-l-2 border-gintong-digit/40 pl-5 max-w-sm">
               <p className="text-base text-[#F5F8F6]/80 leading-relaxed">
-                DoseMate is the automated dispenser, caregiver dashboard, and smartwatch that catch what memory can't — so a missed dose becomes the rare exception, not something you worry about every day.
+                DoseMate is the medication reminder and tracker that catches what memory can't — so a missed dose becomes the rare exception, not something you worry about every day.
               </p>
             </div>
 
@@ -160,7 +160,7 @@ export default function Landing() {
             <div className="grid grid-cols-12 gap-x-6 mt-auto pt-20 items-end">
               <div className="col-span-5 col-start-1 border-l-2 border-gintong-digit/40 pl-6">
                 <p className="text-lg text-[#F5F8F6]/80 leading-relaxed">
-                  DoseMate is the automated dispenser, caregiver dashboard, and smartwatch that catch what memory can't — so a missed dose becomes the rare exception, not something you worry about every day.
+                  DoseMate is the medication reminder and tracker that catches what memory can't — so a missed dose becomes the rare exception, not something you worry about every day.
                 </p>
               </div>
 
@@ -193,7 +193,7 @@ export default function Landing() {
                 transition={{ duration: 0.6 }}
                 className="font-heading font-semibold text-4xl md:text-6xl leading-[0.98]"
               >
-                Four steps, and the dispenser takes it from there.
+                Four steps, and every dose is on your dashboard.
               </motion.h2>
             </div>
 
@@ -287,7 +287,7 @@ export default function Landing() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10 mt-16 pt-16 border-t border-border">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-center md:text-left">
-                  <div className="font-mono font-bold text-primary leading-none text-4xl md:text-5xl">
+                  <div className="font-mono font-bold text-primary leading-none text-3xl md:text-4xl lg:text-5xl">
                     {stat.value}
                   </div>
                   <div className="text-sm text-muted-foreground mt-3">{stat.label}</div>
@@ -313,13 +313,13 @@ export default function Landing() {
               transition={{ duration: 0.6 }}
               className="font-heading font-semibold text-4xl md:text-6xl leading-[0.98] max-w-xl"
             >
-              Set up the first dose<br />in under ten minutes.
+              Set up the first dose<br />in a few minutes.
             </motion.h2>
           </div>
 
           <div className="md:col-span-4 md:border-l md:border-white/15 md:pl-8">
             <p className="text-[#F5F8F6]/60 text-base md:text-lg mb-8 max-w-xs">
-              Create an account, add a patient, pair the dispenser. No credit card, no sales call.
+              Create an account, add a patient, add their medications. No credit card, no sales call.
             </p>
             <div className="flex flex-col gap-3">
               <Link href="/register">
@@ -342,7 +342,7 @@ export default function Landing() {
           <div>
             <Logo markSize="md" tone="dark" textClassName="text-xl" showMark={false} />
             <p className="text-sm opacity-50 mt-4 max-w-xs">
-              An automated dosing dispenser, caregiver dashboard, and smartwatch companion — one connected system for medication adherence.
+              A medication reminder and tracker — schedules, adherence, and emergency info in one place for caregivers and the people they care for.
             </p>
           </div>
 

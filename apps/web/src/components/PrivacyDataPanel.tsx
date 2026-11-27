@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@dosemate/api-client-react";
-import { Download, Trash2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Download, Trash2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,9 +90,9 @@ export function PrivacyDataPanel() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" /> Your data</CardTitle>
+          <CardTitle>Your data</CardTitle>
           <CardDescription>
-            DoseMate handles health information as sensitive personal data under the Philippine Data Privacy Act (RA 10173).{" "}
+            DoseMate treats health information as sensitive personal data under the Philippine Data Privacy Act (RA 10173).{" "}
             <Link href="/privacy" className="text-primary font-semibold hover:underline">Read the Privacy Policy</Link>.
           </CardDescription>
         </CardHeader>
@@ -101,10 +101,10 @@ export function PrivacyDataPanel() {
             <div className="space-y-0.5">
               <div className="font-semibold">Download my data</div>
               <p className="text-sm text-muted-foreground">
-                A file with your account, the patients you own, their medications, schedules, dose history and device logs. Passwords and PINs are never included.
+                A file with your account, the patients you own, their medications, schedules and dose history. Passwords are never included.
               </p>
             </div>
-            <Button variant="outline" className="gap-2 shrink-0" onClick={handleDownload} disabled={downloading}>
+            <Button variant="outline" className="gap-2 shrink-0 w-full sm:w-auto" onClick={handleDownload} disabled={downloading}>
               <Download className="w-4 h-4" /> {downloading ? "Preparing…" : "Download"}
             </Button>
           </div>
@@ -115,12 +115,12 @@ export function PrivacyDataPanel() {
         <CardHeader>
           <CardTitle className="text-destructive">Delete my account</CardTitle>
           <CardDescription>
-            Permanently removes your account and every patient you own, including their medications, schedules, dose history, devices and Emergency QR. This cannot be undone,
+            Permanently removes your account and every patient you own, including their medications, schedules, dose history and Emergency QR. This cannot be undone,
             and caregivers you invited will lose access to those patients.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" className="gap-2" onClick={() => setConfirmOpen(true)}>
+          <Button variant="destructive" className="gap-2 w-full sm:w-auto" onClick={() => setConfirmOpen(true)}>
             <Trash2 className="w-4 h-4" /> Delete my account
           </Button>
         </CardContent>

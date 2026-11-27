@@ -34,7 +34,7 @@ export default function Privacy() {
           <h1 className="text-4xl font-heading font-semibold text-foreground">Privacy Policy</h1>
           <p className="text-sm text-muted-foreground">Last updated {LAST_UPDATED}</p>
           <p className="text-muted-foreground leading-relaxed pt-2">
-            {COMPANY_NAME} helps caregivers and patients manage medication schedules with a connected pill dispenser.
+            {COMPANY_NAME} helps caregivers and patients manage medication schedules, reminders, and dose tracking.
             Because that involves health information, we handle it as <strong className="text-foreground">sensitive personal information</strong> under
             the Philippine Data Privacy Act of 2012 (Republic Act No. 10173) and its implementing rules. This page explains what we collect,
             why, who can see it, and the rights you have.
@@ -46,14 +46,13 @@ export default function Privacy() {
             <li><strong className="text-foreground">Your account:</strong> name, email address, role, and a password (stored only as a salted hash, never in readable form).</li>
             <li><strong className="text-foreground">Patient profile:</strong> name, date of birth, blood type, medical conditions, allergies, emergency contact name and phone number, and preferred language.</li>
             <li><strong className="text-foreground">Medication data:</strong> medicines, dosages, dosing schedules, stock levels, and a record of doses taken or missed.</li>
-            <li><strong className="text-foreground">Device data:</strong> the dispenser's code, status, and activity log. The dispenser PIN is stored only as a hash.</li>
             <li><strong className="text-foreground">Optional contact details:</strong> a mobile number, if you turn on SMS reminders, and the emails of caregivers you invite.</li>
           </ul>
-          <p>We only collect what you or your caregiver enter, plus the activity the dispenser reports. We do not use advertising or analytics trackers. The one third-party request the website makes is to Google Fonts to load its typefaces, which means Google receives your IP address and browser details when a page loads.</p>
+          <p>We only collect what you or your caregiver enter. We do not use advertising or analytics trackers. The one third-party request the website makes is to Google Fonts to load its typefaces, which means Google receives your IP address and browser details when a page loads.</p>
         </Section>
 
         <Section title="2. Why we use it">
-          <p>We use this information to run the service: show today's doses, keep the schedule and dispenser in sync, track adherence, warn about low stock, and display the patient's emergency profile. We process it based on your consent, which you give when you create an account, and which you can withdraw at any time by deleting your account.</p>
+          <p>We use this information to run the service: show today's doses, keep the schedule up to date, track adherence, warn about low stock, and display the patient's emergency profile. We process it based on your consent, which you give when you create an account, and which you can withdraw at any time by deleting your account.</p>
         </Section>
 
         <Section title="3. Who can see it">
@@ -68,7 +67,7 @@ export default function Privacy() {
 
         <Section title="4. How we protect it">
           <ul className="list-disc pl-6 space-y-1.5">
-            <li>Passwords and dispenser PINs are hashed with bcrypt.</li>
+            <li>Passwords are hashed with bcrypt.</li>
             <li>Every patient record is access-controlled: you can only open records you own or have been invited to.</li>
             <li>Sessions expire automatically, and repeated sign-in attempts are rate-limited.</li>
             <li>Responses containing health data are marked so browsers and proxies do not store them.</li>
@@ -78,7 +77,7 @@ export default function Privacy() {
         </Section>
 
         <Section title="5. How long we keep it">
-          <p>We keep your data while your account is active. When you delete your account, we permanently delete your profile, every patient record you own, and the related medications, schedules, dose history, devices, and logs.</p>
+          <p>We keep your data while your account is active. When you delete your account, we permanently delete your profile, every patient record you own, and the related medications, schedules, and dose history.</p>
         </Section>
 
         <Section title="6. Your rights">

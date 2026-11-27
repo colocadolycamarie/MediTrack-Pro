@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useApp } from "@/contexts/AppContext";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Activity, Clock, Settings, Pill, LogOut,
+  Clock, Settings, Pill, LogOut,
   LayoutDashboard, QrCode, ChevronDown, Check, UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
     { icon: Pill, label: "Medications", href: `/patients/${patientId}/medications` },
-    { icon: Activity, label: "Dispenser", href: `/patients/${patientId}/dispenser` },
     { icon: Clock, label: "Adherence", href: `/patients/${patientId}/adherence` },
     { icon: QrCode, label: "Emergency QR", href: `/patients/${patientId}/emergency-qr` },
     { icon: Settings, label: "Settings", href: `/patients/${patientId}/settings` },
@@ -144,7 +143,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="md:hidden flex items-center justify-between p-4 bg-card border-b z-20 print:hidden">
           <Logo href="/dashboard" markSize="sm" textClassName="text-lg" />
           <div className="flex items-center gap-1">
-            {patients && patients.length > 1 && (
+            {patients && patients.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label="Switch patient">
@@ -162,6 +161,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       {p.id === patientId && <Check className="w-4 h-4 text-primary shrink-0" />}
                     </DropdownMenuItem>
                   ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLocation("/onboarding/add-patient")} className="gap-2">
+                    <UserPlus className="w-4 h-4" /> Add another patient
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -193,12 +196,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center p-2 rounded-lg min-w-[4rem]",
+                "flex flex-col items-center justify-center p-2 rounded-lg min-w-[4.25rem] flex-1 max-w-[6rem]",
                 isActive ? "text-primary" : "text-muted-foreground",
               )}
             >
               <item.icon className="w-6 h-6 mb-1" />
-              <span className="text-[10px] font-medium leading-none">{t(item.label)}</span>
+              <span className="text-[11px] font-medium leading-none">{t(item.label)}</span>
             </Link>
           );
         })}

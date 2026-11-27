@@ -18,7 +18,7 @@ import { Link } from "wouter";
 import { formatTime } from "@/lib/utils";
 
 export default function Dashboard() {
-  const { patientId, t } = useApp();
+  const { patientId } = useApp();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -125,7 +125,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Instrument row — next dose readout, today's ring, device status. Calm, not stat-card noise. */}
+      {/* Instrument row — next dose readout, today's ring, stock alerts. Calm, not stat-card noise. */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr_1fr] gap-5">
         <div className="rounded-2xl border border-card-border bg-card p-6 flex flex-col justify-between shadow-[0_1px_2px_rgba(10,53,53,0.04),0_10px_28px_-16px_rgba(14,79,79,0.18)]">
           <div className="text-sm font-semibold text-muted-foreground mb-4">Next dose in</div>
@@ -162,19 +162,7 @@ export default function Dashboard() {
         </div>
 
         <div className="rounded-2xl border border-card-border bg-card p-6 shadow-[0_1px_2px_rgba(10,53,53,0.04),0_10px_28px_-16px_rgba(14,79,79,0.18)]">
-          <div className="text-sm font-semibold text-muted-foreground mb-4">
-            Dispenser status
-          </div>
-          <div className="flex items-center gap-3 mb-5">
-            <span className="relative flex h-2.5 w-2.5">
-              {summary.deviceStatus === 'online' && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-60" />
-              )}
-              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${summary.deviceStatus === 'online' ? 'bg-success' : 'bg-destructive'}`} />
-            </span>
-            <span className="text-lg font-heading font-semibold capitalize">{summary.deviceStatus}</span>
-          </div>
-
+          <div className="text-sm font-semibold text-muted-foreground mb-4">Medication stock</div>
           {summary.stockAlerts && summary.stockAlerts.length > 0 ? (
             <div className="space-y-2.5">
               {summary.stockAlerts.map((alert, i) => (
@@ -186,7 +174,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="flex items-center gap-2 text-success bg-success/10 p-2.5 rounded-xl border border-success/20 text-sm font-medium">
-              <CheckCircle2 className="w-4 h-4 shrink-0" /> All funnels stocked
+              <CheckCircle2 className="w-4 h-4 shrink-0" /> All medications well stocked
             </div>
           )}
         </div>
@@ -203,8 +191,13 @@ export default function Dashboard() {
         </div>
 
         {summary.upcomingDoses.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground bg-card">
-            {t("No medications yet. Add the first one to start the dispensing schedule.")}
+          <div className="rounded-2xl border border-dashed border-border p-8 md:p-10 text-center bg-card flex flex-col items-center gap-4">
+            <p className="text-muted-foreground max-w-md">
+              No doses are scheduled for today. Add a medication and set its times, and they'll show up here to tap as taken.
+            </p>
+            <Link href={`/patients/${patientId}/medications`}>
+              <Button>Go to medications</Button>
+            </Link>
           </div>
         ) : (
           <div className="rounded-2xl border border-card-border bg-card p-5 md:p-6 shadow-[0_1px_2px_rgba(10,53,53,0.04),0_10px_28px_-16px_rgba(14,79,79,0.18)]">

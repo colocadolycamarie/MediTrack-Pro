@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
+import { Route, Switch, Redirect, Router as WouterRouter, useLocation } from 'wouter';
 import { Suspense, lazy, useEffect } from 'react';
 import { MotionConfig } from 'framer-motion';
 import { AppProvider, useApp } from '@/contexts/AppContext';
@@ -13,14 +13,13 @@ import { setBaseUrl, setUnauthorizedHandler } from '@dosemate/api-client-react';
 
 // Pages — the landing page loads eagerly since it's almost always the first
 // paint; everything else is route-split so a first-time visitor isn't paying
-// for the dashboard, dispenser pairing flow, etc. before they've even signed up.
+// for the dashboard, medication screens, etc. before they've even signed up.
 import Landing from '@/pages/Landing';
 const Register = lazy(() => import('@/pages/Register'));
 const Login = lazy(() => import('@/pages/Login'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Medications = lazy(() => import('@/pages/Medications'));
-const Dispenser = lazy(() => import('@/pages/Dispenser'));
 const Adherence = lazy(() => import('@/pages/Adherence'));
 const EmergencyQR = lazy(() => import('@/pages/EmergencyQR'));
 const Settings = lazy(() => import('@/pages/Settings'));
@@ -84,8 +83,9 @@ function Router() {
         <Route path="/patients/:patientId/medications">
           <ProtectedRoute><AppLayout><Medications /></AppLayout></ProtectedRoute>
         </Route>
+        {/* The dispenser screen was removed; keep old bookmarks working. */}
         <Route path="/patients/:patientId/dispenser">
-          <ProtectedRoute><AppLayout><Dispenser /></AppLayout></ProtectedRoute>
+          {(params) => <Redirect to={`/patients/${params.patientId}/medications`} />}
         </Route>
         <Route path="/patients/:patientId/adherence">
           <ProtectedRoute><AppLayout><Adherence /></AppLayout></ProtectedRoute>

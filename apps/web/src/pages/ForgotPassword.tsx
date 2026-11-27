@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CheckCircle2, Users, KeyRound, AlertCircle } from "lucide-react";
+import { CheckCircle2, Mail, KeyRound, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthSidePanel } from "@/components/AuthSidePanel";
 import { Input } from "@/components/ui/input";
@@ -38,25 +38,25 @@ export default function ForgotPassword() {
   return (
     <AuthSidePanel
       heading={<>Locked out is<br className="hidden sm:block" /> never a dead end.</>}
-      subcopy="Recovery instructions go to your email. If the account belongs to a senior citizen or PWD, their linked caregiver has a second way in."
+      subcopy="Recovery instructions go to the email on your account. Check your spam folder if you don't see them."
       panelDetail={
-        <div className="space-y-3 text-left">
-          <div className="flex items-start gap-3 pb-3 border-b border-white/10">
-            <div className="w-9 h-9 rounded-lg bg-gintong-digit/15 text-gintong-digit flex items-center justify-center shrink-0">
-              <KeyRound className="w-4 h-4" />
+        <div className="space-y-4 text-left">
+          <div className="flex items-start gap-4 pb-4 border-b border-white/10">
+            <div className="w-11 h-11 rounded-lg bg-gintong-digit/15 text-gintong-digit flex items-center justify-center shrink-0">
+              <KeyRound className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-bold">Email recovery</div>
-              <div className="text-xs text-[#F5F8F6]/50 mt-0.5">A reset link, sent to the address on file.</div>
+              <div className="text-base font-bold">Email recovery</div>
+              <div className="text-sm text-[#F5F8F6]/65 mt-0.5">A reset link, sent to the address on file.</div>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gintong-digit/15 text-gintong-digit flex items-center justify-center shrink-0">
-              <Users className="w-4 h-4" />
+          <div className="flex items-start gap-4">
+            <div className="w-11 h-11 rounded-lg bg-gintong-digit/15 text-gintong-digit flex items-center justify-center shrink-0">
+              <Mail className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-bold">Caregiver-assisted reset</div>
-              <div className="text-xs text-[#F5F8F6]/50 mt-0.5">A linked caregiver can reset a device PIN from their own Settings.</div>
+              <div className="text-base font-bold">Can't find the email?</div>
+              <div className="text-sm text-[#F5F8F6]/65 mt-0.5">Look in spam or promotions, then try again with the email you signed up with.</div>
             </div>
           </div>
         </div>
@@ -76,8 +76,8 @@ export default function ForgotPassword() {
             If an account exists for <span className="font-semibold text-foreground">{form.getValues().email}</span>, we've sent recovery instructions.
           </p>
           <div className="p-4 bg-muted/40 text-sm mb-5 border-l-2 border-primary">
-            <strong className="block mb-1 text-foreground">Caregiver assistance:</strong>
-            <span className="text-muted-foreground">If you're a patient, your linked caregiver can also reset your device PIN from their Settings dashboard.</span>
+            <strong className="block mb-1 text-foreground">Didn't get it?</strong>
+            <span className="text-muted-foreground">Check your spam folder, or go back and try again with the email you registered with.</span>
           </div>
           <Link href="/login">
             <Button className="w-full h-11">Return to Login</Button>

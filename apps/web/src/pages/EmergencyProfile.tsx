@@ -178,7 +178,7 @@ export default function EmergencyProfile() {
         </Card>
 
         <div className="text-center text-[#F5F8F6]/30 text-xs font-semibold mt-10 uppercase tracking-[0.2em]">
-          DoseMate · Medical IoT System
+          DoseMate · Medication reminders & tracking
         </div>
       </div>
     </div>

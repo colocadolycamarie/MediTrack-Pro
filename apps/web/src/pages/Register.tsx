@@ -26,7 +26,7 @@ const registerSchema = z.object({
 const setupSteps = [
   { label: "Create your account", done: false },
   { label: "Add a patient profile", done: false },
-  { label: "Pair the dispenser", done: false },
+  { label: "Add their medications", done: false },
   { label: "Set the dosing schedule", done: false },
 ];
 
@@ -75,23 +75,23 @@ export default function Register() {
 
   return (
     <AuthSidePanel
-      heading={<>Four steps to a<br className="hidden sm:block" /> fully paired system.</>}
-      subcopy="Creating an account is step one. Here's the full path to a dispenser that's live and dosing on schedule."
+      heading={<>Four steps to<br className="hidden sm:block" /> tracking every dose.</>}
+      subcopy="Creating an account is step one. Here's the full path to a medication schedule you can follow every day."
       panelDetail={
         <ol className="space-y-0">
           {setupSteps.map((s, i) => (
-            <li key={s.label} className="flex items-start gap-3 relative pb-4 last:pb-0 text-left">
+            <li key={s.label} className="flex items-start gap-4 relative pb-5 last:pb-0 text-left">
               {i < setupSteps.length - 1 && (
-                <span className="absolute left-[11px] top-6 bottom-0 w-px bg-white/15" />
+                <span className="absolute left-[15px] top-8 bottom-0 w-px bg-white/15" />
               )}
               <span
-                className={`relative z-10 shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                className={`relative z-10 shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold font-mono ${
                   i === 0 ? "bg-gintong-digit text-panel-ink" : "bg-white/10 text-[#F5F8F6]/50 border border-white/15"
                 }`}
               >
-                {i === 0 ? <Check className="w-3 h-3" /> : i + 1}
+                {i === 0 ? <Check className="w-4 h-4" /> : i + 1}
               </span>
-              <span className={`text-sm font-semibold pt-0.5 ${i === 0 ? "text-[#F5F8F6]" : "text-[#F5F8F6]/50"}`}>
+              <span className={`text-lg font-semibold pt-0.5 ${i === 0 ? "text-[#F5F8F6]" : "text-[#F5F8F6]/60"}`}>
                 {s.label}
               </span>
             </li>
