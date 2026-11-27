@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Readout } from "@/components/ui/readout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertTriangle, AlertCircle, XCircle, Pill, Check, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, AlertCircle, XCircle, Pill, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { formatTime } from "@/lib/utils";
 
@@ -201,7 +201,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="rounded-2xl border border-card-border bg-card p-5 md:p-6 shadow-[0_1px_2px_rgba(10,53,53,0.04),0_10px_28px_-16px_rgba(14,79,79,0.18)]">
-            <div className="flex gap-3.5 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+            <div className="flex gap-3.5 overflow-x-auto pt-2 pb-3 -mx-2 px-2 snap-x">
               {summary.upcomingDoses.map((dose, i) => {
                 const style = statusStyles[dose.status] ?? statusStyles.pending;
                 const isNext = dose.status === 'pending' && i === summary.upcomingDoses.findIndex(d => d.status === 'pending');
@@ -210,7 +210,7 @@ export default function Dashboard() {
                 return (
                   <div
                     key={dose.doseEventId}
-                    className={`relative shrink-0 snap-start w-[148px] rounded-[20px] border-2 ${style.ring} p-4 flex flex-col items-center text-center transition-transform ${isNext ? 'border-primary bg-primary/5 -translate-y-1 shadow-md' : ''}`}
+                    className={`relative shrink-0 snap-start w-[148px] rounded-[20px] border-2 ${style.ring} p-4 flex flex-col items-center text-center ${isNext ? 'border-primary bg-primary/5 shadow-md' : ''}`}
                   >
                     <div className="font-mono text-sm font-semibold text-foreground">{formatTime(dose.scheduledAt)}</div>
                     <div className={`mt-3 mb-2 w-11 h-11 rounded-full flex items-center justify-center ${
@@ -244,7 +244,7 @@ export default function Dashboard() {
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
                           <>
-                            <Check className="w-3.5 h-3.5" /> Mark taken
+                            Mark taken
                           </>
                         )}
                       </Button>
