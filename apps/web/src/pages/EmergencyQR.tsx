@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { useGetEmergencyQr, getGetEmergencyQrQueryKey, useGetPatient, getGetPatientQueryKey } from "@meditrack/api-client-react";
+import { useGetEmergencyQr, getGetEmergencyQrQueryKey, useGetPatient, getGetPatientQueryKey } from "@dosemate/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { QrCode, Download, Printer, ShieldAlert, Loader2 } from "lucide-react";

@@ -1,12 +1,14 @@
 import { Router, type IRouter } from "express";
 import { eq, and, gte, lte } from "drizzle-orm";
-import { db, patientsTable, medicationsTable, schedulesTable, doseEventsTable, devicesTable } from "@meditrack/db";
+import { db, patientsTable, medicationsTable, schedulesTable, doseEventsTable, devicesTable } from "@dosemate/db";
 import {
   GetDashboardSummaryParams,
   GetEmergencyQrParams,
   GetEmergencyPublicProfileParams,
-} from "@meditrack/api-zod";
+} from "@dosemate/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
+import { rateLimit } from "../middlewares/security";
+import { calendarDay, resolveClock, runsOnDay } from "../lib/schedule";
 
 const router: IRouter = Router();
 
@@ -23,27 +25,26 @@ async function materializeTodaysDoseEvents(patientId: number) {
   const meds = await db.select().from(medicationsTable).where(eq(medicationsTable.patientId, patientId));
   const schedules = await db.select().from(schedulesTable).where(eq(schedulesTable.patientId, patientId));
 
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date();
-  endOfDay.setHours(23, 59, 59, 999);
+  // "Today" and each clock time are evaluated in APP_TIMEZONE (see lib/schedule.ts).
+  const today = calendarDay();
 
   const todaysEvents = await db.select().from(doseEventsTable).where(and(
     eq(doseEventsTable.patientId, patientId),
-    gte(doseEventsTable.scheduledAt, startOfDay),
-    lte(doseEventsTable.scheduledAt, endOfDay),
+    gte(doseEventsTable.scheduledAt, today.start),
+    lte(doseEventsTable.scheduledAt, today.end),
   ));
 
   for (const schedule of schedules) {
     const med = meds.find(m => m.id === schedule.medicationId);
-    if (!med || !schedule.clockTime) continue;
+    if (!med) continue;
+    if (!runsOnDay(schedule.daysOfWeek, today.dow)) continue;
 
-    const [hour, minute] = schedule.clockTime.split(":").map(Number);
-    const scheduledAt = new Date();
-    scheduledAt.setHours(hour, minute, 0, 0);
+    const clock = resolveClock(schedule);
+    if (!clock) continue;
+    const scheduledAt = today.at(clock.hour, clock.minute);
 
     const alreadyExists = todaysEvents.some(
-      e => e.medicationId === med.id && e.scheduledAt.getHours() === hour && e.scheduledAt.getMinutes() === minute,
+      e => e.medicationId === med.id && e.scheduledAt.getTime() === scheduledAt.getTime(),
     );
     if (alreadyExists) continue;
 
@@ -185,7 +186,7 @@ router.get("/patients/:patientId/emergency-qr", requireAuth, async (req, res): P
   });
 });
 
-router.get("/emergency/:token", async (req, res): Promise<void> => {
+router.get("/emergency/:token", rateLimit({ name: "emergency", windowMs: 60_000, max: 30, message: "Too many lookups. Please wait a minute and try again." }), async (req, res): Promise<void> => {
   const params = GetEmergencyPublicProfileParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { useListPatients, getListPatientsQueryKey } from "@meditrack/api-client-react";
+import { useListPatients, getListPatientsQueryKey } from "@dosemate/api-client-react";
 import { useApp } from "@/contexts/AppContext";
 import { ShieldAlert } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";

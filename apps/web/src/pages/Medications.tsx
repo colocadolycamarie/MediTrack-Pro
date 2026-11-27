@@ -6,9 +6,11 @@ import {
   useCreateMedication,
   useUpdateMedication,
   useDeleteMedication,
+  useListSchedules,
+  getListSchedulesQueryKey,
   MedicationInputForm,
   type Medication,
-} from "@meditrack/api-client-react";
+} from "@dosemate/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Readout } from "@/components/ui/readout";
-import { Plus, AlertTriangle, Trash2, Edit2 } from "lucide-react";
+import { Plus, AlertTriangle, Trash2, Edit2, CalendarClock } from "lucide-react";
+import { ScheduleDialog, describeSchedule, describeDays } from "@/components/ScheduleDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -46,6 +49,33 @@ const medicationSchema = z.object({
   instructions: z.string().optional(),
 });
 
+/** Compact list of a medication's times, shown on its card. */
+function ScheduleSummary({ patientId, medicationId }: { patientId: number; medicationId: number }) {
+  const { data: schedules } = useListSchedules(patientId, medicationId, {
+    query: { queryKey: getListSchedulesQueryKey(patientId, medicationId) },
+  });
+  if (!schedules) return null;
+  if (schedules.length === 0) {
+    return (
+      <div className="mt-4 text-sm flex gap-2 items-start text-accent font-medium">
+        <CalendarClock className="w-4 h-4 shrink-0 mt-0.5" />
+        <span>No dosing times yet — set a schedule so this shows up on the dashboard.</span>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {schedules.map((s) => (
+        <Badge key={s.id} variant="secondary" className="font-normal gap-1.5">
+          <CalendarClock className="w-3 h-3" />
+          <span className="font-semibold">{describeSchedule(s)}</span>
+          <span className="text-muted-foreground">· {describeDays(s.daysOfWeek)}</span>
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
 export default function Medications() {
   const { patientId, t } = useApp();
   const queryClient = useQueryClient();
@@ -53,6 +83,7 @@ export default function Medications() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingMed, setEditingMed] = useState<Medication | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Medication | null>(null);
+  const [scheduleTarget, setScheduleTarget] = useState<Medication | null>(null);
 
   const handleRequestRefill = (medicationName: string) => {
     toast({
@@ -128,9 +159,11 @@ export default function Medications() {
       return;
     }
     createMut.mutate({ patientId, data: values }, {
-      onSuccess: () => {
+      onSuccess: (created) => {
         queryClient.invalidateQueries({ queryKey: getListMedicationsQueryKey(patientId) });
         closeForm();
+        // A medication without a schedule never shows up on the dashboard, so go straight to setting one.
+        setScheduleTarget(created);
       }
     });
   };
@@ -275,6 +308,12 @@ export default function Medications() {
                         <span>{med.instructions}</span>
                       </div>
                     )}
+
+                    <ScheduleSummary patientId={patientId} medicationId={med.id} />
+
+                    <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={() => setScheduleTarget(med)}>
+                      <CalendarClock className="w-4 h-4" /> Set schedule
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -314,6 +353,8 @@ export default function Medications() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ScheduleDialog patientId={patientId} medication={scheduleTarget} onClose={() => setScheduleTarget(null)} />
 
       <AlertDialog open={deleteTarget != null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>

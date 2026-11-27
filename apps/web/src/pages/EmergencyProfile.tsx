@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { useParams } from "wouter";
-import { useGetEmergencyPublicProfile, getGetEmergencyPublicProfileQueryKey } from "@meditrack/api-client-react";
+import { useGetEmergencyPublicProfile, getGetEmergencyPublicProfileQueryKey } from "@dosemate/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Readout } from "@/components/ui/readout";
@@ -8,6 +9,15 @@ import { Spinner } from "@/components/ui/spinner";
 
 export default function EmergencyProfile() {
   const { token } = useParams<{ token: string }>();
+
+  // A medical profile behind a secret link must never show up in search results.
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow, noarchive";
+    document.head.appendChild(meta);
+    return () => { document.head.removeChild(meta); };
+  }, []);
 
   const { data: profile, isLoading, error } = useGetEmergencyPublicProfile(token || "", {
     query: {
@@ -168,7 +178,7 @@ export default function EmergencyProfile() {
         </Card>
 
         <div className="text-center text-[#F5F8F6]/30 text-xs font-semibold mt-10 uppercase tracking-[0.2em]">
-          MediTrack Pro · Medical IoT System
+          DoseMate · Medical IoT System
         </div>
       </div>
     </div>

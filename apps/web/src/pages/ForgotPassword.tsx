@@ -9,7 +9,7 @@ import { AuthSidePanel } from "@/components/AuthSidePanel";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForgotPassword } from "@meditrack/api-client-react";
+import { useForgotPassword } from "@dosemate/api-client-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const schema = z.object({

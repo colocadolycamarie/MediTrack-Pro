@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 export const devicesTable = pgTable("devices", {
   id: serial("id").primaryKey(),
   patientId: integer("patient_id").notNull(),
-  nickname: text("nickname").notNull().default("MediTrack Dispenser"),
+  nickname: text("nickname").notNull().default("DoseMate Dispenser"),
   deviceCode: text("device_code").notNull(),
   status: text("status").notNull().default("online"), // online | offline | error
   wifiStrength: integer("wifi_strength"),

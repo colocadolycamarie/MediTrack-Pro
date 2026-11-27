@@ -7,8 +7,15 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
+import { securityHeaders, apiNoStore } from "./middlewares/security";
 
 const app: Express = express();
+
+app.disable("x-powered-by");
+// Behind Render/Heroku-style proxies req.ip is the proxy unless this is on; the
+// rate limiter needs the real client IP. Set TRUST_PROXY=0 to turn it off.
+app.set("trust proxy", process.env["TRUST_PROXY"] ? Number(process.env["TRUST_PROXY"]) : process.env.NODE_ENV === "production" ? 1 : 0);
+app.use(securityHeaders);
 
 app.use(
   pinoHttp({
@@ -35,9 +42,10 @@ app.use(
 // deployments where the frontend never makes a cross-origin request.
 const frontendUrl = process.env["FRONTEND_URL"];
 app.use(cors(frontendUrl ? { origin: frontendUrl } : undefined));
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/api", apiNoStore);
 app.use("/api", router);
 app.use("/api", notFoundHandler);
 
@@ -58,7 +66,7 @@ if (process.env.NODE_ENV === "production") {
   } else {
     logger.warn(
       { webDist },
-      "Frontend build not found — run `npm run build --workspace @meditrack/web` before starting in production.",
+      "Frontend build not found — run `npm run build --workspace @dosemate/web` before starting in production.",
     );
   }
 }

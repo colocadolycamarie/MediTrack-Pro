@@ -124,7 +124,7 @@ export default function Landing() {
 
             <div className="mt-9 border-l-2 border-gintong-digit/40 pl-5 max-w-sm">
               <p className="text-base text-[#F5F8F6]/80 leading-relaxed">
-                MediTrack Pro is the automated dispenser, caregiver dashboard, and smartwatch that catch what memory can't — so a missed dose becomes the rare exception, not something you worry about every day.
+                DoseMate is the automated dispenser, caregiver dashboard, and smartwatch that catch what memory can't — so a missed dose becomes the rare exception, not something you worry about every day.
               </p>
             </div>
 
@@ -160,7 +160,7 @@ export default function Landing() {
             <div className="grid grid-cols-12 gap-x-6 mt-auto pt-20 items-end">
               <div className="col-span-5 col-start-1 border-l-2 border-gintong-digit/40 pl-6">
                 <p className="text-lg text-[#F5F8F6]/80 leading-relaxed">
-                  MediTrack Pro is the automated dispenser, caregiver dashboard, and smartwatch that catch what memory can't — so a missed dose becomes the rare exception, not something you worry about every day.
+                  DoseMate is the automated dispenser, caregiver dashboard, and smartwatch that catch what memory can't — so a missed dose becomes the rare exception, not something you worry about every day.
                 </p>
               </div>
 
@@ -237,7 +237,7 @@ export default function Landing() {
               >
                 Missed doses are rarely about forgetting — they're about no one catching it in time.
                 <span className="block text-[#F5F8F6]/55 text-lg md:text-2xl font-normal mt-4 max-w-lg">
-                  MediTrack Pro closes that gap automatically.
+                  DoseMate closes that gap automatically.
                 </span>
               </motion.p>
               <p className="text-sm font-semibold text-[#F5F8F6]/70 max-w-md border-l-2 border-gintong-digit/40 pl-4">
@@ -359,12 +359,13 @@ export default function Landing() {
             <div className="text-xs font-semibold uppercase tracking-widest opacity-40 mb-4">Account</div>
             <ul className="space-y-3 text-sm">
               <li><Link href="/forgot-password" className="opacity-70 hover:opacity-100 transition-opacity">Recover Access</Link></li>
+              <li><Link href="/privacy" className="opacity-70 hover:opacity-100 transition-opacity">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 mt-14 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <p className="text-sm opacity-50">&copy; 2026 MediTrack Pro. All rights reserved.</p>
+          <p className="text-sm opacity-50">&copy; 2026 DoseMate. All rights reserved.</p>
         </div>
       </footer>
     </div>

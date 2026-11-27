@@ -9,8 +9,8 @@ import {
   useGetDeviceLogs,
   getGetDeviceLogsQueryKey,
   ApiError,
-} from "@meditrack/api-client-react";
-import type { Funnel } from "@meditrack/api-client-react";
+} from "@dosemate/api-client-react";
+import type { Funnel } from "@dosemate/api-client-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -141,7 +141,7 @@ export default function Dispenser() {
             <div>
               <h2 className="text-xl font-semibold font-heading">No dispenser paired yet</h2>
               <p className="text-muted-foreground mt-1 max-w-sm">
-                Pair a MediTrack dispenser to enable automatic dispensing, funnel monitoring, and manual overrides.
+                Pair a DoseMate dispenser to enable automatic dispensing, funnel monitoring, and manual overrides.
               </p>
             </div>
             <Button className="mt-2 h-12 px-6" onClick={() => setIsPairModalOpen(true)}>Pair a Device</Button>
@@ -216,7 +216,7 @@ export default function Dispenser() {
               <Power className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="text-2xl font-heading font-semibold text-gintong-digit">{device?.nickname || "MediTrack Dispenser"}</h2>
+              <h2 className="text-2xl font-heading font-semibold text-gintong-digit">{device?.nickname || "DoseMate Dispenser"}</h2>
               <div className="flex items-center gap-4 mt-2 flex-wrap">
                 <Badge variant={device?.status === 'online' ? 'success' : 'destructive'} className="uppercase">
                   {device?.status || 'Unknown'}

@@ -7,7 +7,7 @@ import {
   useListAdherenceLogs,
   getListAdherenceLogsQueryKey,
   useExportAdherenceReport,
-} from "@meditrack/api-client-react";
+} from "@dosemate/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,7 @@ export default function Adherence() {
     const text = `Adherence report for ${summary ? `the last 30 days` : "this patient"}: ${summary?.overallRate ?? 0}% overall rate, ${summary?.currentStreak ?? 0}-day streak, ${summary?.missedCount ?? 0} missed doses.`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "MediTrack Pro Adherence Report", text });
+        await navigator.share({ title: "DoseMate Adherence Report", text });
       } catch {
         // user cancelled the share sheet — not an error
       }

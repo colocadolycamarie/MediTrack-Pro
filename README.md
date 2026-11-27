@@ -1,4 +1,4 @@
-# MediTrack Pro
+# DoseMate
 
 A caregiver dashboard for a connected IoT pill dispenser — medication
 schedules, stock and adherence tracking, a shared "Care Circle" of
@@ -38,7 +38,7 @@ cp apps/api/.env.example apps/api/.env
 # then set DATABASE_URL in apps/api/.env
 
 # Push the schema to your database
-npm run push --workspace @meditrack/db
+npm run push --workspace @dosemate/db
 
 # Run the API and frontend together
 npm run dev
@@ -56,8 +56,8 @@ to the API, so no manual CORS or origin setup is needed locally.
 | `npm run typecheck` | Typecheck every package and app |
 | `npm run build` | Typecheck, then build every package and app |
 | `npm run format` | Format the repo with Prettier |
-| `npm run push --workspace @meditrack/db` | Push the Drizzle schema to your database |
-| `npm run codegen --workspace @meditrack/api-spec` | Regenerate `api-zod` and `api-client-react` from `openapi.yaml` |
+| `npm run push --workspace @dosemate/db` | Push the Drizzle schema to your database |
+| `npm run codegen --workspace @dosemate/api-spec` | Regenerate `api-zod` and `api-client-react` from `openapi.yaml` |
 
 ## Known limitations
 
@@ -85,7 +85,7 @@ deployable process:
 
 ```bash
 npm run build
-NODE_ENV=production DATABASE_URL=... npm run start --workspace @meditrack/api
+NODE_ENV=production DATABASE_URL=... npm run start --workspace @dosemate/api
 ```
 
 ## Project structure
@@ -100,3 +100,11 @@ packages/
   api-zod/            Generated Zod schemas (do not edit — regenerate instead)
   api-client-react/   Generated React Query hooks (do not edit — regenerate instead)
 ```
+
+
+## Scheduling, access control and privacy
+
+- **Scheduling:** open *Medications → Set schedule* on a medication to add dosing times (a set clock time or before/after a meal, on every day or chosen weekdays). Add one entry per time of day. Scheduled doses appear on the dashboard. Set `APP_TIMEZONE` (see `apps/api/.env.example`) so times follow your local clock.
+- **Access control:** every `/api/patients/:patientId/...` route is gated in one place (`apps/api/src/middlewares/requirePatientAccess.ts`). Owners can do everything; invited caregivers with *View only* are read-only; only the owner can add or remove caregivers.
+- **Privacy (RA 10173):** a Privacy Policy page lives at `/privacy`, sign-up requires consent, and *Settings → Privacy & Data* lets users download their data or permanently delete their account. Before launch set `VITE_PRIVACY_EMAIL` and `VITE_COMPANY_NAME` for the frontend build so the policy shows your real contact details, and have the policy reviewed by a lawyer or your Data Protection Officer.
+- **Database:** none of these changes alter the database schema, so no migration is needed.

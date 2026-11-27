@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useLogin } from "@meditrack/api-client-react";
+import { useLogin } from "@dosemate/api-client-react";
 import { useApp } from "@/contexts/AppContext";
 import { AnimatePresence, motion } from "framer-motion";
 

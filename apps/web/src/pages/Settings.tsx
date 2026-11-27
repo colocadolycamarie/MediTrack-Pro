@@ -12,7 +12,7 @@ import {
   useSetDispensePin,
   CaregiverInviteInputAccessLevel,
   type NotificationSettings,
-} from "@meditrack/api-client-react";
+} from "@dosemate/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -24,19 +24,21 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Bell, Smartphone, Globe, Eye, UserCog, AlertCircle, Plus, Trash2, Mail, Clock, KeyRound, Check } from "lucide-react";
+import { Bell, Smartphone, Globe, Eye, UserCog, AlertCircle, Plus, Trash2, Mail, Clock, KeyRound, Check, ShieldCheck } from "lucide-react";
+import { PrivacyDataPanel } from "@/components/PrivacyDataPanel";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
-type SettingsTab = "preferences" | "accessibility" | "notifications" | "care-circle";
+type SettingsTab = "preferences" | "accessibility" | "notifications" | "care-circle" | "privacy";
 
 const TABS: { id: SettingsTab; label: string; icon: typeof Globe }[] = [
   { id: "preferences", label: "Preferences", icon: Globe },
   { id: "accessibility", label: "Accessibility", icon: Eye },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "care-circle", label: "Care Circle", icon: UserCog },
+  { id: "privacy", label: "Privacy & Data", icon: ShieldCheck },
 ];
 
 export default function Settings() {
@@ -269,6 +271,7 @@ export default function Settings() {
           )}
 
           {activeTab === "care-circle" && <CareCircleTab patientId={patientId} />}
+          {activeTab === "privacy" && <PrivacyDataPanel />}
         </div>
       </div>
     </div>

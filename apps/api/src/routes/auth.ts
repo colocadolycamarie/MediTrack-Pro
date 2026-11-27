@@ -1,12 +1,13 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, usersTable } from "@meditrack/db";
+import { db, usersTable } from "@dosemate/db";
 import {
   RegisterBody,
   LoginBody,
   ForgotPasswordBody,
-} from "@meditrack/api-zod";
+} from "@dosemate/api-zod";
 import bcrypt from "bcryptjs";
+import { rateLimit } from "../middlewares/security";
 import { randomBytes } from "crypto";
 
 const router: IRouter = Router();
@@ -29,19 +30,39 @@ function generateToken(userId: number): string {
   return Buffer.from(`${userId}:${Date.now()}:${randomBytes(16).toString("hex")}`).toString("base64");
 }
 
-// In-memory session store for demo
-const sessions = new Map<string, number>();
+// In-memory session store. Sessions now expire (default 7 days, override with
+// SESSION_TTL_HOURS) instead of living until the server restarts.
+const SESSION_TTL_MS = (Number(process.env["SESSION_TTL_HOURS"]) || 24 * 7) * 60 * 60 * 1000;
+const sessions = new Map<string, { userId: number; expiresAt: number }>();
+
+function createSession(token: string, userId: number): void {
+  sessions.set(token, { userId, expiresAt: Date.now() + SESSION_TTL_MS });
+}
 
 export function getUserIdFromToken(token: string): number | null {
-  const userId = sessions.get(token);
-  return userId ?? null;
+  const session = sessions.get(token);
+  if (!session) return null;
+  if (session.expiresAt <= Date.now()) {
+    sessions.delete(token);
+    return null;
+  }
+  return session.userId;
 }
 
 export function destroySession(token: string): void {
   sessions.delete(token);
 }
 
-router.post("/auth/register", async (req, res): Promise<void> => {
+/** Ends every active session for a user (used when an account is deleted). */
+export function destroyAllSessionsForUser(userId: number): void {
+  for (const [token, s] of sessions) if (s.userId === userId) sessions.delete(token);
+}
+
+// Slow down password guessing / account spam / reset-email abuse (per IP).
+const authLimiter = rateLimit({ name: "auth", windowMs: 15 * 60 * 1000, max: 20 });
+const registerLimiter = rateLimit({ name: "register", windowMs: 60 * 60 * 1000, max: 15 });
+
+router.post("/auth/register", registerLimiter, async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -64,7 +85,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   }).returning();
 
   const token = generateToken(user.id);
-  sessions.set(token, user.id);
+  createSession(token, user.id);
 
   res.status(201).json({
     user: { id: user.id, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt },
@@ -72,7 +93,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   });
 });
 
-router.post("/auth/login", async (req, res): Promise<void> => {
+router.post("/auth/login", authLimiter, async (req, res): Promise<void> => {
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -88,7 +109,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   }
 
   const token = generateToken(user.id);
-  sessions.set(token, user.id);
+  createSession(token, user.id);
 
   res.json({
     user: { id: user.id, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt },
@@ -110,7 +131,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Not authenticated." });
     return;
   }
-  const userId = sessions.get(auth.slice(7));
+  const userId = getUserIdFromToken(auth.slice(7));
   if (!userId) {
     res.status(401).json({ error: "Session expired." });
     return;
@@ -123,7 +144,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
   res.json({ id: user.id, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt });
 });
 
-router.post("/auth/forgot-password", async (req, res): Promise<void> => {
+router.post("/auth/forgot-password", authLimiter, async (req, res): Promise<void> => {
   const parsed = ForgotPasswordBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

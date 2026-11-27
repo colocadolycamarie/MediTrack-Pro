@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, gte, desc } from "drizzle-orm";
-import { db, doseEventsTable, medicationsTable, schedulesTable, patientsTable, notificationSettingsTable } from "@meditrack/db";
+import { db, doseEventsTable, medicationsTable, schedulesTable, patientsTable, notificationSettingsTable } from "@dosemate/db";
 import {
   ListAdherenceLogsParams,
   ConfirmDoseParams,
@@ -12,14 +12,15 @@ import {
   GetNotificationSettingsParams,
   UpdateNotificationSettingsParams,
   UpdateNotificationSettingsBody,
-} from "@meditrack/api-zod";
+} from "@dosemate/api-zod";
 import { randomBytes } from "crypto";
 
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
-router.use(requireAuth);
+// Scoped to /patients so public routes (e.g. /emergency/:token) further down the chain stay reachable.
+router.use("/patients", requireAuth);
 
 function serializeDoseEvent(e: typeof doseEventsTable.$inferSelect, medicationName = "Unknown") {
   return {

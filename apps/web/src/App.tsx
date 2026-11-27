@@ -9,7 +9,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageSpinner } from '@/components/PageSpinner';
 import { bootstrapAuthToken } from '@/lib/auth-token';
-import { setBaseUrl, setUnauthorizedHandler } from '@meditrack/api-client-react';
+import { setBaseUrl, setUnauthorizedHandler } from '@dosemate/api-client-react';
 
 // Pages — the landing page loads eagerly since it's almost always the first
 // paint; everything else is route-split so a first-time visitor isn't paying
@@ -27,6 +27,7 @@ const Settings = lazy(() => import('@/pages/Settings'));
 const EmergencyProfile = lazy(() => import('@/pages/EmergencyProfile'));
 const AddPatient = lazy(() => import('@/pages/AddPatient'));
 const WatchUI = lazy(() => import('@/pages/WatchUI'));
+const Privacy = lazy(() => import('@/pages/Privacy'));
 const NotFound = lazy(() => import('@/pages/not-found'));
 
 // When the frontend and API are deployed separately (e.g. this app on
@@ -70,6 +71,7 @@ function Router() {
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/emergency/:token" component={EmergencyProfile} />
         <Route path="/watch" component={WatchUI} />
+        <Route path="/privacy" component={Privacy} />
 
         <Route path="/onboarding/add-patient">
           <ProtectedRoute requirePatient={false}><AddPatient /></ProtectedRoute>

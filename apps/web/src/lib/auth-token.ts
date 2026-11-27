@@ -1,7 +1,7 @@
-import { setAuthTokenGetter } from "@meditrack/api-client-react";
+import { setAuthTokenGetter } from "@dosemate/api-client-react";
 
-const TOKEN_KEY = "meditrack_token";
-const PATIENT_KEY = "meditrack_active_patient";
+const TOKEN_KEY = "dosemate_token";
+const PATIENT_KEY = "dosemate_active_patient";
 
 export function getStoredToken(): string | null {
   try {

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
-import { db, medicationsTable, schedulesTable } from "@meditrack/db";
+import { db, medicationsTable, schedulesTable } from "@dosemate/db";
 import {
   CreateMedicationParams,
   CreateMedicationBody,
@@ -15,13 +15,15 @@ import {
   UpdateScheduleBody,
   DeleteScheduleParams,
   ListSchedulesParams,
-} from "@meditrack/api-zod";
+} from "@dosemate/api-zod";
 
 import { requireAuth } from "../middlewares/requireAuth";
+import { computeNextDose, resolveClock, VALID_MEAL_RELATIONS } from "../lib/schedule";
 
 const router: IRouter = Router();
 
-router.use(requireAuth);
+// Scoped to /patients so public routes (e.g. /emergency/:token) further down the chain stay reachable.
+router.use("/patients", requireAuth);
 
 // Known drug interactions for demo
 const INTERACTIONS: Record<string, string[]> = {
@@ -77,16 +79,42 @@ function serializeSchedule(s: typeof schedulesTable.$inferSelect, nextDoseAt?: s
   };
 }
 
-function computeNextDoseAt(schedule: typeof schedulesTable.$inferSelect): string | null {
-  if (schedule.timeType === "clock" && schedule.clockTime) {
-    const [hour, minute] = schedule.clockTime.split(":").map(Number);
-    const now = new Date();
-    const next = new Date(now);
-    next.setHours(hour, minute, 0, 0);
-    if (next <= now) next.setDate(next.getDate() + 1);
-    return next.toISOString();
+const computeNextDoseAt = (schedule: typeof schedulesTable.$inferSelect): string | null => computeNextDose(schedule);
+
+/** Average doses per day across a medication's schedules (empty days list = every day). */
+function dosesPerDayFor(medicationId: number, schedules: Array<typeof schedulesTable.$inferSelect>): number {
+  const mine = schedules.filter(sc => sc.medicationId === medicationId);
+  if (mine.length === 0) return 1; // no schedule yet: keep the old "1 per day" estimate
+  return mine.reduce((sum, sc) => {
+    let days: unknown = [];
+    try { days = JSON.parse(sc.daysOfWeek || "[]"); } catch { /* treat as every day */ }
+    const perWeek = Array.isArray(days) && days.length > 0 ? days.length : 7;
+    return sum + perWeek / 7;
+  }, 0);
+}
+
+/** A medication id from the URL only counts if it really belongs to the patient in the URL. */
+async function medicationBelongsToPatient(patientId: number, medicationId: number): Promise<boolean> {
+  const [med] = await db.select().from(medicationsTable)
+    .where(and(eq(medicationsTable.id, medicationId), eq(medicationsTable.patientId, patientId))).limit(1);
+  return Boolean(med);
+}
+
+type ScheduleCandidate = { timeType: string; clockTime: string | null; mealRelation: string | null };
+
+/** Returns an error message if the schedule couldn't actually fire, otherwise null. */
+function validateSchedule(sc: ScheduleCandidate): string | null {
+  if (sc.timeType === "clock") {
+    if (!resolveClock({ ...sc, timeType: "clock" })) return "Enter a valid time (HH:MM, 24-hour) for a clock-time schedule.";
+    return null;
   }
-  return null;
+  if (sc.timeType === "meal_relative") {
+    if (!sc.mealRelation || !(VALID_MEAL_RELATIONS as readonly string[]).includes(sc.mealRelation)) {
+      return "Choose before/after breakfast, lunch or dinner for a meal-relative schedule.";
+    }
+    return null;
+  }
+  return "Unknown schedule type.";
 }
 
 router.get("/patients/:patientId/medications", async (req, res): Promise<void> => {
@@ -97,7 +125,9 @@ router.get("/patients/:patientId/medications", async (req, res): Promise<void> =
   }
   const meds = await db.select().from(medicationsTable)
     .where(eq(medicationsTable.patientId, params.data.patientId));
-  res.json(meds.map(m => serializeMedication(m)));
+  const schedules = await db.select().from(schedulesTable)
+    .where(eq(schedulesTable.patientId, params.data.patientId));
+  res.json(meds.map(m => serializeMedication(m, dosesPerDayFor(m.id, schedules))));
 });
 
 router.post("/patients/:patientId/medications", async (req, res): Promise<void> => {
@@ -188,10 +218,16 @@ router.delete("/patients/:patientId/medications/:medicationId", async (req, res)
     res.status(400).json({ error: params.error.message });
     return;
   }
-  await db.delete(medicationsTable).where(and(
+  const removed = await db.delete(medicationsTable).where(and(
     eq(medicationsTable.id, params.data.medicationId),
     eq(medicationsTable.patientId, params.data.patientId),
-  ));
+  )).returning({ id: medicationsTable.id });
+  if (removed.length > 0) {
+    await db.delete(schedulesTable).where(and(
+      eq(schedulesTable.medicationId, params.data.medicationId),
+      eq(schedulesTable.patientId, params.data.patientId),
+    ));
+  }
   res.json({ success: true, message: "Medication deleted." });
 });
 
@@ -199,6 +235,10 @@ router.get("/patients/:patientId/medications/:medicationId/schedules", async (re
   const params = ListSchedulesParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (!(await medicationBelongsToPatient(params.data.patientId, params.data.medicationId))) {
+    res.status(404).json({ error: "Medication not found." });
     return;
   }
   const schedules = await db.select().from(schedulesTable)
@@ -220,12 +260,28 @@ router.post("/patients/:patientId/medications/:medicationId/schedules", async (r
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  if (!(await medicationBelongsToPatient(params.data.patientId, params.data.medicationId))) {
+    res.status(404).json({ error: "Medication not found." });
+    return;
+  }
+
+  const candidate = {
+    timeType: parsed.data.timeType,
+    clockTime: parsed.data.clockTime ?? null,
+    mealRelation: parsed.data.mealRelation && String(parsed.data.mealRelation) !== "null" ? String(parsed.data.mealRelation) : null,
+  };
+  const problem = validateSchedule(candidate);
+  if (problem) {
+    res.status(400).json({ error: problem });
+    return;
+  }
+
   const [schedule] = await db.insert(schedulesTable).values({
     medicationId: params.data.medicationId,
     patientId: params.data.patientId,
-    timeType: parsed.data.timeType,
-    clockTime: parsed.data.clockTime ?? null,
-    mealRelation: parsed.data.mealRelation ?? null,
+    timeType: candidate.timeType,
+    clockTime: candidate.timeType === "clock" ? candidate.clockTime : null,
+    mealRelation: candidate.timeType === "meal_relative" ? candidate.mealRelation : null,
     daysOfWeek: JSON.stringify(parsed.data.daysOfWeek ?? []),
   }).returning();
   res.status(201).json(serializeSchedule(schedule, computeNextDoseAt(schedule)));
@@ -242,13 +298,38 @@ router.patch("/patients/:patientId/medications/:medicationId/schedules/:schedule
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+
+  // Scope by patient AND medication AND schedule id — the schedule id alone is not proof of ownership.
+  const scope = and(
+    eq(schedulesTable.id, params.data.scheduleId),
+    eq(schedulesTable.medicationId, params.data.medicationId),
+    eq(schedulesTable.patientId, params.data.patientId),
+  );
+  const [existing] = await db.select().from(schedulesTable).where(scope).limit(1);
+  if (!existing) {
+    res.status(404).json({ error: "Schedule not found." });
+    return;
+  }
+
   const updateData: Record<string, unknown> = { ...parsed.data };
   if (parsed.data.daysOfWeek !== undefined) {
     updateData.daysOfWeek = JSON.stringify(parsed.data.daysOfWeek);
   }
-  const [schedule] = await db.update(schedulesTable).set(updateData)
-    .where(eq(schedulesTable.id, params.data.scheduleId))
-    .returning();
+
+  const merged = {
+    timeType: (parsed.data.timeType ?? existing.timeType) as string,
+    clockTime: parsed.data.clockTime !== undefined ? parsed.data.clockTime : existing.clockTime,
+    mealRelation: parsed.data.mealRelation !== undefined ? parsed.data.mealRelation : existing.mealRelation,
+  };
+  const problem = validateSchedule(merged);
+  if (problem) {
+    res.status(400).json({ error: problem });
+    return;
+  }
+  if (merged.timeType === "clock") updateData.mealRelation = null;
+  if (merged.timeType === "meal_relative") updateData.clockTime = null;
+
+  const [schedule] = await db.update(schedulesTable).set(updateData).where(scope).returning();
   if (!schedule) {
     res.status(404).json({ error: "Schedule not found." });
     return;
@@ -262,7 +343,15 @@ router.delete("/patients/:patientId/medications/:medicationId/schedules/:schedul
     res.status(400).json({ error: params.error.message });
     return;
   }
-  await db.delete(schedulesTable).where(eq(schedulesTable.id, params.data.scheduleId));
+  const removed = await db.delete(schedulesTable).where(and(
+    eq(schedulesTable.id, params.data.scheduleId),
+    eq(schedulesTable.medicationId, params.data.medicationId),
+    eq(schedulesTable.patientId, params.data.patientId),
+  )).returning({ id: schedulesTable.id });
+  if (removed.length === 0) {
+    res.status(404).json({ error: "Schedule not found." });
+    return;
+  }
   res.json({ success: true, message: "Schedule deleted." });
 });
 

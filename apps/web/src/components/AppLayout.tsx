@@ -12,7 +12,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { useLogout, useGetMe, useListPatients, getListPatientsQueryKey } from "@meditrack/api-client-react";
+import { useLogout, useGetMe, useListPatients, getListPatientsQueryKey } from "@dosemate/api-client-react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();

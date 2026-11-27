@@ -13,7 +13,7 @@ const sizeMap = {
 };
 
 /**
- * MediTrack Pro brand mark — the dispenser + smartwatch + QR icon.
+ * DoseMate brand mark — the dispenser + smartwatch + QR icon.
  * Rendered plainly (no extra chip/background) since the artwork already
  * carries its own panel, so it drops cleanly onto dark or light surfaces.
  */
@@ -60,7 +60,7 @@ export function Logo({ className, markSize = "md", textClassName, tone = "light"
           textClassName,
         )}
       >
-        MediTrack <span className={tone === "dark" ? "text-gintong-digit" : "text-accent"}>Pro</span>
+        Dose<span className={tone === "dark" ? "text-gintong-digit" : "text-accent"}>Mate</span>
       </span>
     </div>
   );
@@ -70,7 +70,7 @@ export function Logo({ className, markSize = "md", textClassName, tone = "light"
   return (
     <Link
       href={href}
-      aria-label="MediTrack Pro — go to home"
+      aria-label="DoseMate — go to home"
       className={cn(
         "inline-flex rounded-lg transition-opacity hover:opacity-75 active:opacity-60",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",

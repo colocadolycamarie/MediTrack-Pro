@@ -7,7 +7,7 @@ import {
   getGetWeeklyAdherenceQueryKey,
   getListAdherenceLogsQueryKey,
   getGetAdherenceTrendsQueryKey,
-} from "@meditrack/api-client-react";
+} from "@dosemate/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Readout } from "@/components/ui/readout";

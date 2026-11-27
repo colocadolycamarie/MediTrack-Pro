@@ -23,7 +23,7 @@ export default function WatchUI() {
 
   return (
     <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-panel-ink text-[#F5F8F6] flex flex-col lg:flex-row">
-      {/* Left — how the watch fits into the rest of MediTrack Pro. Not a
+      {/* Left — how the watch fits into the rest of DoseMate. Not a
           generic smartwatch mockup blurb; the specific sync points that
           make this screen meaningful. */}
       <div className="relative lg:w-[38%] lg:shrink-0 overflow-hidden flex flex-col justify-center gap-8 px-6 py-8 md:px-10 lg:px-12">

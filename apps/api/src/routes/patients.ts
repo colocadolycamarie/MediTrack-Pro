@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
-import { db, patientsTable, patientCaregiversTable, usersTable } from "@meditrack/db";
+import { db, patientsTable, patientCaregiversTable, usersTable } from "@dosemate/db";
 import {
   CreatePatientBody,
   UpdatePatientBody,
@@ -12,7 +12,7 @@ import {
   InviteCaregiverBody,
   RemoveCaregiverParams,
   ListPatientCaregiversParams,
-} from "@meditrack/api-zod";
+} from "@dosemate/api-zod";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -20,7 +20,8 @@ import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
-router.use(requireAuth);
+// Scoped to /patients so public routes (e.g. /emergency/:token) further down the chain stay reachable.
+router.use("/patients", requireAuth);
 
 // Same work factor as user password hashing (see auth.ts) — a caregiver PIN
 // gates a real-world action (dispensing medication), so it deserves the same
@@ -233,6 +234,11 @@ router.post("/patients/:patientId/caregivers", async (req, res): Promise<void> =
     return;
   }
 
+  if (req.patientRole !== "owner") {
+    res.status(403).json({ error: "Only the patient's owner can invite caregivers." });
+    return;
+  }
+
   const parsed = InviteCaregiverBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -275,6 +281,11 @@ router.delete("/patients/:patientId/caregivers/:caregiverId", async (req, res): 
   const params = RemoveCaregiverParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  if (req.patientRole !== "owner") {
+    res.status(403).json({ error: "Only the patient's owner can remove caregivers." });
     return;
   }
 

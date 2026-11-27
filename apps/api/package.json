@@ -1,5 +1,5 @@
 {
-  "name": "@meditrack/api",
+  "name": "@dosemate/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,8 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@meditrack/api-zod": "*",
-    "@meditrack/db": "*",
+    "@dosemate/api-zod": "*",
+    "@dosemate/db": "*",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "drizzle-orm": "^0.45.2",

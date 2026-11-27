@@ -9,8 +9,9 @@ import { AuthSidePanel } from "@/components/AuthSidePanel";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useRegister, RegistrationInputRole } from "@meditrack/api-client-react";
+import { useRegister, RegistrationInputRole } from "@dosemate/api-client-react";
 import { useApp } from "@/contexts/AppContext";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -19,6 +20,7 @@ const registerSchema = z.object({
   email: z.string().email("Enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   role: z.nativeEnum(RegistrationInputRole),
+  consent: z.boolean().refine((v) => v === true, "You need to agree to the Privacy Policy to create an account."),
 });
 
 const setupSteps = [
@@ -42,6 +44,7 @@ export default function Register() {
       email: "",
       password: "",
       role: "caregiver",
+      consent: false,
     },
   });
 
@@ -49,7 +52,10 @@ export default function Register() {
 
   const onSubmit = (values: z.infer<typeof registerSchema>) => {
     setFormError(null);
-    registerMut.mutate({ data: values }, {
+    // `consent` is a front-end gate only; the API doesn't take it.
+    const { consent: _consent, ...payload } = values;
+    void _consent;
+    registerMut.mutate({ data: payload }, {
       onSuccess: (data) => {
         login(data.token);
         setLocation("/dashboard");
@@ -204,6 +210,30 @@ export default function Register() {
                         <span className={`text-sm transition-colors ${passwordValue.length >= 8 ? "text-success font-medium" : "text-muted-foreground"}`}>
                           At least 8 characters
                         </span>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="consent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-start gap-3">
+                        <FormControl>
+                          <Checkbox
+                            id="consent"
+                            checked={field.value}
+                            onCheckedChange={(v) => field.onChange(v === true)}
+                            className="mt-0.5"
+                          />
+                        </FormControl>
+                        <label htmlFor="consent" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+                          I agree to the <Link href="/privacy" className="text-primary font-semibold hover:underline" target="_blank">Privacy Policy</Link> and
+                          consent to DoseMate processing health information I (or the patient I care for) enter, as described there.
+                        </label>
                       </div>
                       <FormMessage />
                     </FormItem>

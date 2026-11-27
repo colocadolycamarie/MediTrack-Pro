@@ -68,7 +68,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Keep auth state in sync across tabs (e.g. logging out in one tab logs out the others)
   useEffect(() => {
     function onStorage(e: StorageEvent) {
-      if (e.key === "meditrack_token") {
+      if (e.key === "dosemate_token") {
         setIsAuthenticated(Boolean(e.newValue));
         if (!e.newValue) {
           setPatientIdState(0);

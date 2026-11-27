@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { useCreatePatient, useListPatients, useLogout, getListPatientsQueryKey } from "@meditrack/api-client-react";
+import { useCreatePatient, useListPatients, useLogout, getListPatientsQueryKey } from "@dosemate/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";

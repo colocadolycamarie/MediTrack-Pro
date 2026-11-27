@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc } from "drizzle-orm";
-import { db, devicesTable, deviceLogsTable, medicationsTable, patientsTable } from "@meditrack/db";
+import { db, devicesTable, deviceLogsTable, medicationsTable, patientsTable } from "@dosemate/db";
 import {
   ListDevicesParams,
   PairDeviceParams,
@@ -9,14 +9,15 @@ import {
   ManualDispenseParams,
   ManualDispenseBody,
   GetDeviceLogsParams,
-} from "@meditrack/api-zod";
+} from "@dosemate/api-zod";
 import bcrypt from "bcryptjs";
 
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
-router.use(requireAuth);
+// Scoped to /patients so public routes (e.g. /emergency/:token) further down the chain stay reachable.
+router.use("/patients", requireAuth);
 
 function getFunnelStatus(stockCount: number): "ok" | "low" | "empty" | "jam" {
   if (stockCount === 0) return "empty";
@@ -57,7 +58,7 @@ router.post("/patients/:patientId/devices", async (req, res): Promise<void> => {
   }
   const [device] = await db.insert(devicesTable).values({
     patientId: params.data.patientId,
-    nickname: parsed.data.nickname ?? "MediTrack Dispenser",
+    nickname: parsed.data.nickname ?? "DoseMate Dispenser",
     deviceCode: parsed.data.deviceCode,
     status: "online",
     wifiStrength: -65,
@@ -158,7 +159,10 @@ router.post("/patients/:patientId/devices/:deviceId/dispense", async (req, res):
   }
 
   const [device] = await db.select().from(devicesTable)
-    .where(eq(devicesTable.id, params.data.deviceId)).limit(1);
+    .where(and(
+      eq(devicesTable.id, params.data.deviceId),
+      eq(devicesTable.patientId, params.data.patientId),
+    )).limit(1);
   if (!device) {
     res.status(404).json({ error: "Device not found." });
     return;
@@ -169,7 +173,10 @@ router.post("/patients/:patientId/devices/:deviceId/dispense", async (req, res):
   }
 
   const [med] = await db.select().from(medicationsTable)
-    .where(eq(medicationsTable.id, parsed.data.medicationId)).limit(1);
+    .where(and(
+      eq(medicationsTable.id, parsed.data.medicationId),
+      eq(medicationsTable.patientId, params.data.patientId),
+    )).limit(1);
   if (med && med.stockCount > 0) {
     await db.update(medicationsTable)
       .set({ stockCount: med.stockCount - 1 })
@@ -196,6 +203,15 @@ router.get("/patients/:patientId/devices/:deviceId/logs", async (req, res): Prom
   const params = GetDeviceLogsParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [ownDevice] = await db.select().from(devicesTable)
+    .where(and(
+      eq(devicesTable.id, params.data.deviceId),
+      eq(devicesTable.patientId, params.data.patientId),
+    )).limit(1);
+  if (!ownDevice) {
+    res.status(404).json({ error: "Device not found." });
     return;
   }
   const logs = await db.select().from(deviceLogsTable)

@@ -1,5 +1,5 @@
 {
-  "name": "meditrack-pro",
+  "name": "dosemate",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -11,7 +11,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,green \"npm --workspace @meditrack/api run dev\" \"npm --workspace @meditrack/web run dev\"",
+    "dev": "concurrently -n api,web -c blue,green \"npm --workspace @dosemate/api run dev\" \"npm --workspace @dosemate/web run dev\"",
     "build": "npm run typecheck && npm run --workspaces --if-present build",
     "typecheck:packages": "tsc --build",
     "typecheck": "npm run typecheck:packages && npm run --workspaces --if-present typecheck",
